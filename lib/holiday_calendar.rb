@@ -137,7 +137,8 @@ class HolidayCalendar
     
     private
     
-    
+    # read all yaml files in the config directory looking for one with a territory of the specified name, 
+    # and load it
     def instantiate_std_from_config
         x = 5
     end
@@ -146,6 +147,8 @@ class HolidayCalendar
     def instantiate_from_yaml
         x = 5
     end
+    
+    
     
     def instantiate_from_array(options)
         validate_keys_for_array_mode(options)
