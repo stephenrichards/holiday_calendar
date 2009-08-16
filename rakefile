@@ -5,6 +5,6 @@ task :doc do
     doc_dir = "#{File.dirname(__FILE__)}/doc"
     system "rm -r #{doc_dir}" if File.exist?(doc_dir)
     
-    system 'rdoc -x test'
+    system 'rdoc -x test -S -N -m README'
      
 end
