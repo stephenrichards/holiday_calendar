@@ -1,0 +1,10 @@
+
+
+desc 'Produce documentation'
+task :doc do
+    doc_dir = "#{File.dirname(__FILE__)}/doc"
+    system "rm -r #{doc_dir}" if File.exist?(doc_dir)
+    
+    system 'rdoc -x test'
+     
+end
