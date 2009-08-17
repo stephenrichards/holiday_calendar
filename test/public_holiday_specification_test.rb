@@ -1,6 +1,5 @@
 
-
-require 'test_helper'
+require File.dirname(__FILE__) + '/test_helper'
 require File.dirname(__FILE__) + '/../lib/public_holiday_specification'
 require File.dirname(__FILE__) + '/mocks/mock_public_holiday_specification'
 require File.dirname(__FILE__) + '/../lib/religious_festival'

@@ -1,4 +1,7 @@
+require 'rake'
+require 'rake/testtask'
 
+task :default => [:test]
 
 desc 'Produce documentation'
 task :doc do
@@ -7,4 +10,16 @@ task :doc do
     
     system 'rdoc -x test -S -N -m README'
      
+end
+
+# desc 'Run test suite'
+# task :test do
+#     require File.dirname(__FILE__) + '/test/units'
+# end
+    
+    
+Rake::TestTask.new('test') do |t|
+    t.pattern = 'test/*_test.rb'
+    t.verbose = true
+    t.warning = true
 end

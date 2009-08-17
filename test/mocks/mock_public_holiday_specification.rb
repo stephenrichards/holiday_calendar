@@ -1,5 +1,5 @@
 
-require File.dirname(__FILE__) + '/../../lib/public_holiday_specification'
+# require File.dirname(__FILE__) + '/../../lib/public_holiday_specification' 
 
 class MockPublicHolidaySpecification < PublicHolidaySpecification
     

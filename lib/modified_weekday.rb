@@ -44,9 +44,9 @@ class ModifiedWeekday
     
     
     def sort_value
-        sort_value = @weekday_occurrance * 10
-        sort_value = 50 if sort_value == 0
-        sort_value += @wday
+        sort_val = @weekday_occurrance * 10
+        sort_val = 50 if sort_val == 0
+        sort_val += @wday
     end
     
 

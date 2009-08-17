@@ -1,4 +1,4 @@
-require 'test_helper'
+require File.dirname(__FILE__) + '/test_helper'
 require File.dirname(__FILE__) + '/../lib/holiday_calendar'
 require File.dirname(__FILE__) + '/../lib/public_holiday_specification'
 
