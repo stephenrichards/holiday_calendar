@@ -46,7 +46,7 @@ class HolidayCalendar
         
         case options[:mode]
         when :std_config
-            instantiate_std_from_config(options)
+            instantiate_from_std_config(options)
         when :yaml
             instantiate_from_yaml(options)
         when :array
@@ -140,8 +140,17 @@ class HolidayCalendar
     
     # read all yaml files in the config directory looking for one with a territory of the specified name, 
     # and load it
-    def instantiate_std_from_config
-        x = 5
+    def instantiate_from_std_config(options)
+        raise ArgumentError.new('No territory specified for HolidayCalendar.new in std_config mode') if !options.has_key?(:territory)
+        
+        territory = options[:territory].to_s
+        yaml_files = Dir[File.dirname(__FILE__) + '/../config/*.yaml']
+        yaml_files.each do |yf|
+            puts yf
+            yaml_spec = YAML.load_file(yf)
+            next if yaml_spec['territory'] != territory
+            instantiate_from_yaml(:filename => yf)
+        end
     end
     
     

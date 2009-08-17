@@ -187,6 +187,24 @@ class HolidayCalendarTest < Test::Unit::TestCase
     
     
     
+    def test_exception_thrown_if_no_territory_param_passed_in_std_config_mode
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.new(:mode => :std_config, :unknown_param => :uk)
+        end
+        assert_equal 'No territory specified for HolidayCalendar.new in std_config mode', err.message  
+    end
+    
+    
+    def test_loading_from_std_config_gives_expected_results
+        # given a holiday calendar loaded from a standard config for france
+        cal = HolidayCalendar.new(:mode => :std_config, :territory => :fr)
+        
+        # when I test french holiday dates, then they should be holidays
+        assert_true cal.public_holiday, Date.new(2009, 7, 14)
+    end
+              
+    
+    
     
     
     
