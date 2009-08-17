@@ -12,11 +12,7 @@ task :doc do
      
 end
 
-# desc 'Run test suite'
-# task :test do
-#     require File.dirname(__FILE__) + '/test/units'
-# end
-    
+
     
 Rake::TestTask.new('test') do |t|
     t.pattern = 'test/*_test.rb'

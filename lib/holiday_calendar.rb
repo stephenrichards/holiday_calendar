@@ -1,4 +1,5 @@
 require File.dirname(__FILE__) + '/public_holiday'
+require 'yaml'
 
 
 
@@ -14,11 +15,12 @@ require File.dirname(__FILE__) + '/public_holiday'
 
 class HolidayCalendar
     
-    attr_reader :territory, :weekends
+    attr_reader :territory, :weekend
     
     @@keys_for_std_config   = [:territory]
     @@keys_for_yaml         = [:filename]
-    @@keys_for_array        = [:territory, :weekends, :specs]
+    @@keys_for_array        = [:territory, :weekend, :specs]
+    @@valid_day_names       = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
     
     
    # instantiate a HolidayCalendar object
@@ -27,11 +29,11 @@ class HolidayCalendar
    # * options: a hash of keywords in one of the following three styles
    #   * :mode => std_config, :territory => :xx
    #   * :mode => yaml, :filename => 'path/to/yaml/file'
-   #   * :mode => array, :territory => :xx, :weekends => [n, n], :specs => [phs1, phs2, phs3, ...]
+   #   * :mode => array, :territory => :xx, :weekend => [n, n], :specs => [phs1, phs2, phs3, ...]
    #
     def initialize(options)
         @territory                      = nil
-        @weekends                       = nil
+        @weekend                       = nil
         @public_holiday_specifications  = nil
         @generated_years                = Array.new
         @public_holiday_collection      = Array.new
@@ -61,14 +63,14 @@ class HolidayCalendar
 
     # returns true if the specified date is a weekend
     def weekend?(date)
-        @weekends.include?(date.wday)
+        @weekend.include?(date.wday)
     end
     
     
     # returns true if the specified date is a public holiday
 
     def public_holiday?(date)
-        return false if weekend?(date)                  # weekends are never public holidays
+        return false if weekend?(date)                  # weekend are never public holidays
         populate_public_holiday_collection_for_year(date.year)
         
         return true if @public_holiday_hash.has_key?(date)
@@ -144,21 +146,85 @@ class HolidayCalendar
     end
     
     
-    def instantiate_from_yaml
-        x = 5
+    def instantiate_from_yaml(options)
+        filename = options[:filename]
+        
+        if filename == nil
+            raise ArgumentError.new('The following mandatory keys were not passed to HolidayCalendar.new in :yaml mode: :filename')
+        end
+        
+        if !File.exist?(filename)
+            raise ArgumentError.new("The filename specified in HolidayCalender.new cannot be found: #{filename}")
+        end
+                
+        yaml_file_contents = YAML.load_file(filename)
+        validate_yaml_file_contents(filename, yaml_file_contents)
+        
+       
     end
+    
+    
+    def validate_yaml_file_contents(filename, yaml_file_contents)
+        validate_and_populate_territory(filename, yaml_file_contents)
+        validate_and_populate_weekend(filename, yaml_file_contents)
+        
+    end
+    
+    
+    def validate_and_populate_territory(filename, yaml_file_contents)
+        if !yaml_file_contents.has_key? 'territory'
+            raise ArgumentError.new("YAML file #{filename} does not have a 'territory' setting")
+        end
+        @territory = yaml_file_contents['territory'].to_sym
+    end    
+    
+    
+    def validate_and_populate_weekend(filename, yaml_file_contents)
+        raise ArgumentError.new("YAML file #{filename} does not have a 'weekend' setting") if !yaml_file_contents.has_key? 'weekend'
+        klass = yaml_file_contents['weekend'].class
+        raise ArgumentError.new("Invalid YAML file element 'weekend' - must be an Array, is #{klass}") if klass != Array
+            
+        weekend_array = Array.new
+        
+        yaml_file_contents['weekend'].each do |day|
+            day_num = @@valid_day_names.index(day.downcase)
+            raise ArgumentError.new("Invalid day specified as weekend: #{day}") if !day_num
+            weekend_array << day_num
+        end
+        @weekend = weekend_array
+    end        
+    
+        
+ 
+ 
+    # {"weekend"=>["saturday", "sunday"],
+    #  "territory"=>"uk",
+    #  "public_holidays"=>
+    #   [{"New Year's Day"=>{"month"=>1, "years"=>"all", "day"=>1}},
+    #    {"Good Friday"=>
+    #      {"class_method"=>"ReligiousFestival.good_friday", "years"=>"all"}},
+    #    {"Easter Monday"=>
+    #      {"class_method"=>"ReligiousFestival.easter_monday", "years"=>"all"}},
+    #    {"May Day"=>{"month"=>5, "years"=>"all", "day"=>"first_monday"}},
+    #    {"Spring Bank Holiday"=>{"month"=>5, "years"=>"all", "day"=>"last_monday"}},
+    #    {"Summer Bank Holiday"=>{"month"=>8, "years"=>"all", "day"=>"last_monday"}},
+    #    {"Christmas Day"=>
+    #      {"month"=>12, "carry_forward"=>true, "years"=>"all", "day"=>25}},
+    #    {"Boxing Day"=>
+    #      {"month"=>12, "carry_forward"=>true, "years"=>"all", "day"=>26}}]}
+ 
     
     
     
     def instantiate_from_array(options)
         validate_keys_for_array_mode(options)
-        @weekends = options[:weekends]
+        @weekend = options[:weekend]
         @public_holiday_specifications = options[:specs]
     end
     
     
     def validate_keys_for_array_mode(options)
-        valid_keys = [:mode, :territory, :weekends, :specs]
+        valid_keys = [:mode, :territory, :weekend, :specs]
         options.keys.each do |key|
             if !valid_keys.include?(key)
                 raise ArgumentError.new("Invalid key passed to HolidayCalendar.new in :array mode: #{key}")

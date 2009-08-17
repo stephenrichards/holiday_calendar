@@ -1,40 +1,40 @@
 # working day schema for UK
   
-territory_UK_en:  
-    weekends:
-        - saturday
-        - sunday
-    
-    public_holidays:
-        - New Year's Day:
-            years: all
-            month: 1
-            day: 1
-        - Good Friday:
-            years: all
-            class_method: ReligiousFestival.good_friday
-        - Easter Monday:
-            years: all
-            class_method: ReligiousFestival.easter_monday
-        - May Day:
-            years: all
-            month: 5
-            day: first_monday
-        - Spring Bank Holiday:
-            years: all
-            month: 5
-            day: last_monday
-        - Summer Bank Holiday:
-            years: all
-            month: 8
-            day: last_monday
-        - Christmas Day:
-            years: all
-            month: 12
-            day: 25
-            carry_forward: true
-        - Boxing Day:
-            years: all
-            month: 12
-            day: 26
-            carry_forward: yes
+territory: uk
+weekend:
+    - saturday
+    - sunday
+
+public_holidays:
+    - New Year's Day:
+        years: all
+        month: 1
+        day: 1
+    - Good Friday:
+        years: all
+        class_method: ReligiousFestival.good_friday
+    - Easter Monday:
+        years: all
+        class_method: ReligiousFestival.easter_monday
+    - May Day:
+        years: all
+        month: 5
+        day: first_monday
+    - Spring Bank Holiday:
+        years: all
+        month: 5
+        day: last_monday
+    - Summer Bank Holiday:
+        years: all
+        month: 8
+        day: last_monday
+    - Christmas Day:
+        years: all
+        month: 12
+        day: 25
+        carry_forward: true
+    - Boxing Day:
+        years: all
+        month: 12
+        day: 26
+        carry_forward: yes

@@ -6,21 +6,136 @@ require File.dirname(__FILE__) + '/../lib/public_holiday_specification'
 
 class HolidayCalendarTest < Test::Unit::TestCase
     
+  
+    ########### setup methods
     
     def setup
         # create a working day schema with three public holidays, and weekends on Saturday, Sunday
-        xmas    = PublicHolidaySpecification.new(:name => 'Christmas Day', :years => :all, :month => 12, :day => 25, :carry_forward => true)
-        box     = PublicHolidaySpecification.new(:name => 'Boxing Day', :years => :all, :month => 12, :day => 26, :carry_forward => true)
-        mayday  = PublicHolidaySpecification.new(:name => 'May Day', :years => :all, :month => 5, :day => :first_monday, :carry_forward => true)
-        tg      = PublicHolidaySpecification.new(:name => 'Thanksgiving Day', :years => :all, :month => 11, :day => :last_thursday)
-        summer  = PublicHolidaySpecification.new(:name => 'Summer Bank Holiday', :years => :all, :month => 8, :day => :last_monday)
-        spring  = PublicHolidaySpecification.new(:name => 'Spring Bank Holiday', :years => :all, :month => 5, :day => :last_monday)
-        newyear = PublicHolidaySpecification.new(:name => "New Year's Day", :years => :all, :month => 1, :day => 1)
-        olympic = PublicHolidaySpecification.new(:name => 'Olympics Day', :years => 2012, :month => 8, :day => 12)
+        @xmas    = PublicHolidaySpecification.new(:name => 'Christmas Day', :years => :all, :month => 12, :day => 25, :carry_forward => true)
+        @box     = PublicHolidaySpecification.new(:name => 'Boxing Day', :years => :all, :month => 12, :day => 26, :carry_forward => true)
+        @mayday  = PublicHolidaySpecification.new(:name => 'May Day', :years => :all, :month => 5, :day => :first_monday, :carry_forward => true)
+        @tg      = PublicHolidaySpecification.new(:name => 'Thanksgiving Day', :years => :all, :month => 11, :day => :last_thursday)
+        @summer  = PublicHolidaySpecification.new(:name => 'Summer Bank Holiday', :years => :all, :month => 8, :day => :last_monday)
+        @spring  = PublicHolidaySpecification.new(:name => 'Spring Bank Holiday', :years => :all, :month => 5, :day => :last_monday)
+        @newyear = PublicHolidaySpecification.new(:name => "New Year's Day", :years => :all, :month => 1, :day => 1)
+        @olympic = PublicHolidaySpecification.new(:name => 'Olympics Day', :years => 2012, :month => 8, :day => 12)
         
-        @cal = HolidayCalendar.new(:mode => :array, :territory => :uk, :weekends => [0,6], :specs => [xmas, mayday, tg, box, newyear, spring, olympic, summer])
+        @cal = HolidayCalendar.new(:mode => :array, 
+                                   :territory => :uk, 
+                                   :weekend => [0,6], 
+                                   :specs => [@xmas, @mayday, @tg, @box, @newyear, @spring, @olympic, @summer])
+                                   
+        @yaml_filename = File.dirname(__FILE__) + '/test.yaml'
     end
     
+    def setup_yaml_contents
+        @yaml_contents = Hash.new
+        @yaml_contents['territory'] = 'uk'
+        @yaml_contents['weekend'] = ['saturday', 'sunday']
+        @yaml_contents['public_holidays'] = [@xmas, @mayday, @tg, @box, @newyear, @spring, @olympic, @summer]
+    end
+        
+    
+    def save_yaml_contents
+        File.open(@yaml_filename, 'w') { |f|  YAML.dump(@yaml_contents, f) }
+    end
+    
+    
+    
+    ############# tests 
+    
+    def test_exception_raised_if_no_filename_parameter_passed_to_new_in_yaml_mode
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.new(:mode => :yaml, :xxx => 'yyy')
+        end
+        assert_equal 'The following mandatory keys were not passed to HolidayCalendar.new in :yaml mode: :filename', err.message
+    end   
+    
+    
+    def test_exception_thrown_when_no_territory_setting_supplied_in_yaml_file
+        # given a yaml file with no territory section
+        setup_yaml_contents
+        @yaml_contents.delete('territory')
+        save_yaml_contents
+        
+        # when I try to instantiate a HolidayCalendar from the file
+        # I should get an exception
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+        end
+        assert_equal "YAML file #{@yaml_filename} does not have a 'territory' setting", err.message
+    end
+        
+    
+    def test_exception_thrown_when_no_weekend_setting_supplied_in_yaml_file
+        # given a yaml file with no weekend section
+        setup_yaml_contents
+        @yaml_contents.delete('weekend')
+        save_yaml_contents
+        
+        # when I try to instantiate a HolidayCalendar from the file
+        # I should get an exception
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+        end
+        assert_equal "YAML file #{@yaml_filename} does not have a 'weekend' setting", err.message
+    end    
+    
+    def test_exception_thrown_when_no_weekend_setting_in_yaml_file_is_not_an_array
+        # given a yaml file with no weekend section
+        setup_yaml_contents
+        @yaml_contents['weekend'] = "saturday, sunday"
+        save_yaml_contents
+        
+        # when I try to instantiate a HolidayCalendar from the file
+        # I should get an exception
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+        end
+        assert_equal "Invalid YAML file element 'weekend' - must be an Array, is String", err.message
+    end    
+    
+    
+    def test_exception_thrown_when_invalid_day_name_given_as_weekend_in_yaml_file
+        # given a yaml file with an invalid weekend section
+        setup_yaml_contents
+        @yaml_contents['weekend'] = ['subbota', 'voskresseniye']
+        save_yaml_contents
+
+        # when I try to instantiate a HolidayCalendar from the file
+        # I should get an exception
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+        end
+        assert_equal "Invalid day specified as weekend: subbota", err.message
+    end        
+    
+    
+    def test_weekend_day_names_are_translated_into_correct_day_numbers
+        # given a yaml file with no weekend section
+        setup_yaml_contents
+        save_yaml_contents
+
+        # when I instantiate a HolidayCalendar from a yaml file
+        cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+
+        # the weekend should be setup correctly
+        assert_equal [6,0],  cal.weekend
+    end    
+    
+    
+    
+    
+    
+    
+    
+    
+    def test_exception_raised_if_filename_specifies_non_existing_file_in_yaml_mode
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.new(:mode => :yaml, :filename => 'i_do_not_exist.yaml')
+        end
+        assert_equal 'The filename specified in HolidayCalender.new cannot be found: i_do_not_exist.yaml', err.message
+    end    
     
 
     def test_exception_raised_if_no_mode_parameter_passed_to_new
@@ -51,7 +166,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
         err = assert_raise ArgumentError do
             cal = HolidayCalendar.new(:mode => :array, :territory => :uk)
         end
-        assert_equal "The following mandatory keys were not passed to HolidayCalendar.new in :array mode: weekends, specs", err.message
+        assert_equal "The following mandatory keys were not passed to HolidayCalendar.new in :array mode: weekend, specs", err.message
     end    
         
         
