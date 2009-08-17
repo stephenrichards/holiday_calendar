@@ -1,4 +1,5 @@
 require File.dirname(__FILE__) + '/public_holiday'
+require File.dirname(__FILE__) + '/religious_festival'
 require 'yaml'
 
 
@@ -53,8 +54,6 @@ class HolidayCalendar
         else
             raise ArgumentError.new("Invalid :mode parameter passed to HolidayCalendar.new: #{options[:mode].inspect}")
         end
-        
-        
     end
          
     
@@ -159,15 +158,13 @@ class HolidayCalendar
                 
         yaml_file_contents = YAML.load_file(filename)
         validate_yaml_file_contents(filename, yaml_file_contents)
-        
-       
     end
     
     
     def validate_yaml_file_contents(filename, yaml_file_contents)
         validate_and_populate_territory(filename, yaml_file_contents)
         validate_and_populate_weekend(filename, yaml_file_contents)
-        
+        validate_and_populate_public_holidays(filename, yaml_file_contents)
     end
     
     
@@ -195,24 +192,18 @@ class HolidayCalendar
     end        
     
         
- 
- 
-    # {"weekend"=>["saturday", "sunday"],
-    #  "territory"=>"uk",
-    #  "public_holidays"=>
-    #   [{"New Year's Day"=>{"month"=>1, "years"=>"all", "day"=>1}},
-    #    {"Good Friday"=>
-    #      {"class_method"=>"ReligiousFestival.good_friday", "years"=>"all"}},
-    #    {"Easter Monday"=>
-    #      {"class_method"=>"ReligiousFestival.easter_monday", "years"=>"all"}},
-    #    {"May Day"=>{"month"=>5, "years"=>"all", "day"=>"first_monday"}},
-    #    {"Spring Bank Holiday"=>{"month"=>5, "years"=>"all", "day"=>"last_monday"}},
-    #    {"Summer Bank Holiday"=>{"month"=>8, "years"=>"all", "day"=>"last_monday"}},
-    #    {"Christmas Day"=>
-    #      {"month"=>12, "carry_forward"=>true, "years"=>"all", "day"=>25}},
-    #    {"Boxing Day"=>
-    #      {"month"=>12, "carry_forward"=>true, "years"=>"all", "day"=>26}}]}
- 
+    def validate_and_populate_public_holidays(filename, yaml_file_contents)
+        raise ArgumentError.new("YAML file #{filename} does not have a 'public_holidays' setting") if !yaml_file_contents.has_key? 'public_holidays'
+        klass = yaml_file_contents['public_holidays'].class
+        raise ArgumentError.new("Invalid YAML file element 'public_holidays' - must be an Hash, is #{klass}") if klass != Hash
+        
+        phs_array = Array.new
+        yaml_file_contents['public_holidays'].each do |name, yaml_spec|
+            phs = PublicHolidaySpecification.instantiate_from_yaml_definition(filename, name, yaml_spec)
+            phs_array<< phs
+        end
+        @public_holiday_specifications = phs_array
+    end
     
     
     

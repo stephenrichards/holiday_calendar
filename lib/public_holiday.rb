@@ -65,7 +65,7 @@ class PublicHoliday
     def setup_public_holiday(phs, year)
        @name = phs.name
        if phs.uses_class_method?
-           @date = phs.klass.send(phs.method, year)
+           @date = phs.klass.send(phs.method_name, year)
        elsif phs.day.is_a? Fixnum
            @date = Date.new(year, phs.month, phs.day)
        else

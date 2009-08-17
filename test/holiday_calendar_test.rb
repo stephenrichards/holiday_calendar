@@ -11,19 +11,19 @@ class HolidayCalendarTest < Test::Unit::TestCase
     
     def setup
         # create a working day schema with three public holidays, and weekends on Saturday, Sunday
-        @xmas    = PublicHolidaySpecification.new(:name => 'Christmas Day', :years => :all, :month => 12, :day => 25, :carry_forward => true)
-        @box     = PublicHolidaySpecification.new(:name => 'Boxing Day', :years => :all, :month => 12, :day => 26, :carry_forward => true)
-        @mayday  = PublicHolidaySpecification.new(:name => 'May Day', :years => :all, :month => 5, :day => :first_monday, :carry_forward => true)
-        @tg      = PublicHolidaySpecification.new(:name => 'Thanksgiving Day', :years => :all, :month => 11, :day => :last_thursday)
-        @summer  = PublicHolidaySpecification.new(:name => 'Summer Bank Holiday', :years => :all, :month => 8, :day => :last_monday)
-        @spring  = PublicHolidaySpecification.new(:name => 'Spring Bank Holiday', :years => :all, :month => 5, :day => :last_monday)
-        @newyear = PublicHolidaySpecification.new(:name => "New Year's Day", :years => :all, :month => 1, :day => 1)
-        @olympic = PublicHolidaySpecification.new(:name => 'Olympics Day', :years => 2012, :month => 8, :day => 12)
+        xmas    = PublicHolidaySpecification.new(:name => 'Christmas Day', :years => :all, :month => 12, :day => 25, :carry_forward => true)
+        box     = PublicHolidaySpecification.new(:name => 'Boxing Day', :years => :all, :month => 12, :day => 26, :carry_forward => true)
+        mayday  = PublicHolidaySpecification.new(:name => 'May Day', :years => :all, :month => 5, :day => :first_monday, :carry_forward => true)
+        tg      = PublicHolidaySpecification.new(:name => 'Thanksgiving Day', :years => :all, :month => 11, :day => :last_thursday)
+        summer  = PublicHolidaySpecification.new(:name => 'Summer Bank Holiday', :years => :all, :month => 8, :day => :last_monday)
+        spring  = PublicHolidaySpecification.new(:name => 'Spring Bank Holiday', :years => :all, :month => 5, :day => :last_monday)
+        newyear = PublicHolidaySpecification.new(:name => "New Year's Day", :years => :all, :month => 1, :day => 1)
+        olympic = PublicHolidaySpecification.new(:name => 'Olympics Day', :years => 2012, :month => 8, :day => 12)
         
         @cal = HolidayCalendar.new(:mode => :array, 
                                    :territory => :uk, 
                                    :weekend => [0,6], 
-                                   :specs => [@xmas, @mayday, @tg, @box, @newyear, @spring, @olympic, @summer])
+                                   :specs => [xmas, mayday, tg, box, newyear, spring, olympic, summer])
                                    
         @yaml_filename = File.dirname(__FILE__) + '/test.yaml'
     end
@@ -32,7 +32,12 @@ class HolidayCalendarTest < Test::Unit::TestCase
         @yaml_contents = Hash.new
         @yaml_contents['territory'] = 'uk'
         @yaml_contents['weekend'] = ['saturday', 'sunday']
-        @yaml_contents['public_holidays'] = [@xmas, @mayday, @tg, @box, @newyear, @spring, @olympic, @summer]
+        public_holidays = Hash.new
+        public_holidays["New Year's Day"]           = {"month"=>1, "years"=>"all", "day"=>1}
+        public_holidays["Mayday"]                   = {"month"=>5, "years"=>"all", "day"=>"first_monday"}
+        public_holidays["Good Friday"]              = {"class_method"=>"ReligiousFestival.good_friday", "years"=>"all"}
+        
+        @yaml_contents['public_holidays'] = public_holidays
     end
         
     
@@ -122,6 +127,69 @@ class HolidayCalendarTest < Test::Unit::TestCase
         # the weekend should be setup correctly
         assert_equal [6,0],  cal.weekend
     end    
+    
+    
+    def test_exception_thrown_when_no_public_holiday_setting_supplied_in_yaml_file
+        # given a yaml file with no weekend section
+        setup_yaml_contents
+        @yaml_contents.delete('public_holidays')
+        save_yaml_contents
+        
+        # when I try to instantiate a HolidayCalendar from the file
+        # I should get an exception
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+        end
+        assert_equal "YAML file #{@yaml_filename} does not have a 'public_holidays' setting", err.message
+    end
+    
+    
+    def test_exception_thrown_when_no_public_holiday_setting_in_yaml_file_is_not_an_array
+        # given a yaml file with no weekend section
+        setup_yaml_contents
+        @yaml_contents['public_holidays'] = "Good Friday, Easter Monday"
+        save_yaml_contents
+        
+        # when I try to instantiate a HolidayCalendar from the file
+        # I should get an exception
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+        end
+        assert_equal "Invalid YAML file element 'public_holidays' - must be an Hash, is String", err.message
+    end
+    
+    
+    def test_that_holidays_are_setup_as_expected_from_yaml_file
+        # given a yaml file
+        setup_yaml_contents
+        save_yaml_contents
+        
+        # when I instantiate a Holiday Calendar from it
+        cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+        # Then the first monday in may should be a public holiday
+        assert_true cal.public_holiday?(Date.new(2009, 5, 4))
+        
+        # new Year's day should be a holiday
+        assert_true cal.public_holiday?(Date.new(2009, 1, 1))
+        
+        # Good Friday should be a public holiday
+        assert_true cal.public_holiday?(Date.new(2009, 4, 10))
+
+
+        # saturdays and sundays should be weekends
+        assert_true cal.weekend?(Date.new(2009, 8, 15))
+        assert_true cal.weekend?(Date.new(2009, 8, 16))
+        
+        # evrything else should be a working day
+        assert_true cal.working_day?(Date.new(2009, 8, 13))
+        
+    end
+    
+    
+    
+    
+    
+    
     
     
     

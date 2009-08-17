@@ -5,7 +5,7 @@ require File.dirname(__FILE__) + '/modified_weekday'
 class PublicHolidaySpecification
     include Enumerable
     
-    attr_reader     :name, :sort_value, :day, :month, :uses_class_method, :klass, :method
+    attr_reader     :name, :day, :month, :uses_class_method, :klass, :method_name
     
     
     @@month_names = {'January' => 1, 'February' => 2, 'March' => 3, 'April'=> 4,
@@ -40,12 +40,35 @@ class PublicHolidaySpecification
         @day                = nil
         @uses_class_method  = false
         @klass              = nil
-        @method             = nil
+        @method_name        = nil
         @carry_forward      = false
         
         validate_params(params)
         # @sort_value = generate_sort_value
     end
+    
+    
+    
+    def self.instantiate_from_yaml_definition(filename, name, yaml_spec)
+        raise ArgumentError.new("Invalid definition of #{name} in public_holidays section of #{filename}") if !yaml_spec.is_a? Hash
+        params = Hash.new
+        params[:name] = name
+        yaml_spec.each do |key, value|
+            key = key.to_sym if key.is_a? String
+            unless key == :class_method
+                value = value.to_sym if value.is_a? String
+            end
+            params[key] = value
+        end
+        phs = PublicHolidaySpecification.new(params)
+        phs
+    end
+    
+    
+    
+    
+    
+    
     
     def uses_class_method?
         @uses_class_method
@@ -145,11 +168,11 @@ class PublicHolidaySpecification
     
     def validate_class_method(value)
        class_method =  value
-       classname, method = value.split('.')
+       classname, method_name = value.split('.')
        klass = Kernel.const_get(classname)
        
        begin
-           valid_method = klass.respond_to?(method)
+           valid_method = klass.respond_to?(method_name)
        rescue NameError => err
            puts "Unknown Class passed to PublicHolidaySpecification.new as class_method parameter: #{class_method}"
            raise
@@ -161,7 +184,7 @@ class PublicHolidaySpecification
        
        @uses_class_method = true
        @klass = klass
-       @method = method
+       @method_name = method_name
     end
     
     

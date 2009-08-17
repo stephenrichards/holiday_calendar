@@ -14,12 +14,57 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
         assert_instance_of PublicHolidaySpecification, phs
         assert_true phs.uses_class_method?
         assert_equal ReligiousFestival, phs.klass
-        assert_equal 'good_friday', phs.method
+        assert_equal 'good_friday', phs.method_name
         
     end
     
     
     
+    def test_instantiating_from_yaml_throws_error_if_yaml_spec_is_not_hash
+        # given a yaml_spac that is not a hash
+        yaml_spec = [1, 33, 4]
+        
+        # when I attempt to instantiate a PHS from it, I should get an exception
+        err = assert_raise ArgumentError do
+            phs = PublicHolidaySpecification.instantiate_from_yaml_definition('/path/to/file.yaml', 'Good Friday', yaml_spec)
+        end
+        
+        assert_equal "Invalid definition of Good Friday in public_holidays section of /path/to/file.yaml", err.message
+    end
+
+
+    def test_instantiating_from_yaml_spec_with_first_monday_works_as_expected
+        # given a first_monday yaml spec
+        yaml_spec = {'month' => 5, 'day' => 'first_monday', 'years' => 'all'}
+        
+        # when I instantiate a PHS
+        phs = PublicHolidaySpecification.instantiate_from_yaml_definition('filename', 'May Day', yaml_spec)
+
+        # then the object attributes should be as expected
+        assert_equal 'May Day', phs.name
+        assert_equal 5, phs.month
+        assert_equal ModifiedWeekday.new(:first_monday), phs.day
+        assert_false phs.uses_class_method
+        assert_nil phs.klass
+        assert_nil phs.method_name
+    end
+
+
+    def test_instantiating_from_yaml_spec_with_class_method_works_as_expected
+        # given a first_monday yaml spec
+        yaml_spec = {"class_method"=>"ReligiousFestival.good_friday", "years"=>"all"}
+        
+        # when I instantiate a PHS
+        phs = PublicHolidaySpecification.instantiate_from_yaml_definition('filename', 'Good Friday', yaml_spec)
+
+        # then the object attributes should be as expected
+        assert_equal 'Good Friday', phs.name
+        assert_nil phs.month
+        assert_nil phs.day
+        assert_true phs.uses_class_method
+        assert_equal ReligiousFestival, phs.klass
+        assert_equal 'good_friday', phs.method_name
+    end
 
 
     
