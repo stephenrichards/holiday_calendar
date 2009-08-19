@@ -7,4 +7,5 @@
 # * implement saturday_to_friday
 # * allow deletion of a holiday
 # * allow addition of a holiday
+# * change instantiotion methods for HolidayCalendar: new(:uk), load(filename), create([phs, phs, ...])
 

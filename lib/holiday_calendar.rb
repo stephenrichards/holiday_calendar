@@ -171,6 +171,9 @@ class HolidayCalendar
     
     
     def validate_yaml_file_contents(filename, yaml_file_contents)
+        puts filename
+        puts yaml_file_contents.class
+        pp yaml_file_contents
         validate_and_populate_territory(filename, yaml_file_contents)
         validate_and_populate_weekend(filename, yaml_file_contents)
         validate_and_populate_public_holidays(filename, yaml_file_contents)

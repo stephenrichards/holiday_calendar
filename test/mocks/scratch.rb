@@ -13,3 +13,4 @@ pp config
 puts "***************************"
 config = YAML.load_file(File.dirname(__FILE__) + '/../test.yaml')
 pp config
+puts "Noël"
