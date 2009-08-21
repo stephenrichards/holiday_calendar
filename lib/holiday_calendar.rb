@@ -146,11 +146,16 @@ class HolidayCalendar
         territory = options[:territory].to_s
         yaml_files = Dir[File.dirname(__FILE__) + '/../config/*.yaml']
         yaml_files.each do |yf|
-            puts yf
-            yaml_spec = YAML.load_file(yf)
-            next if yaml_spec['territory'] != territory
-            instantiate_from_yaml(:filename => yf)
+            begin
+                yaml_spec = YAML.load_file(yf)
+                next if yaml_spec['territory'] != territory
+                instantiate_from_yaml(:filename => yf)
+            rescue => err
+                puts "ERROR while loading #{yf}"
+                raise
+            end    
         end
+
     end
     
     
@@ -171,9 +176,6 @@ class HolidayCalendar
     
     
     def validate_yaml_file_contents(filename, yaml_file_contents)
-        puts filename
-        puts yaml_file_contents.class
-        pp yaml_file_contents
         validate_and_populate_territory(filename, yaml_file_contents)
         validate_and_populate_weekend(filename, yaml_file_contents)
         validate_and_populate_public_holidays(filename, yaml_file_contents)

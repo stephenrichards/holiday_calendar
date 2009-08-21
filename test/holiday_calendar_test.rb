@@ -200,7 +200,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
         cal = HolidayCalendar.new(:mode => :std_config, :territory => :fr)
         
         # when I test french holiday dates, then they should be holidays
-        assert_true cal.public_holiday, Date.new(2009, 7, 14)
+        assert_true cal.public_holiday?(Date.new(2009, 7, 14))
     end
               
     

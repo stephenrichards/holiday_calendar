@@ -9,7 +9,7 @@ public_holidays:
         month: 1
         day: 1
         carry_forward: true
-    - Birthday of Martin Luther King, Jr.
+    - Birthday of Martin Luther King, Jr.:
         years: all
         month: 1
         day: 19
