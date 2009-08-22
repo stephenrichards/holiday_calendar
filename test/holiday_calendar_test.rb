@@ -10,21 +10,18 @@ class HolidayCalendarTest < Test::Unit::TestCase
     ########### setup methods
     
     def setup
-        # create a working day schema with three public holidays, and weekends on Saturday, Sunday
-        xmas    = PublicHolidaySpecification.new(:name => 'Christmas Day', :years => :all, :month => 12, :day => 25, :carry_forward => true)
-        box     = PublicHolidaySpecification.new(:name => 'Boxing Day', :years => :all, :month => 12, :day => 26, :carry_forward => true)
-        mayday  = PublicHolidaySpecification.new(:name => 'May Day', :years => :all, :month => 5, :day => :first_monday, :carry_forward => true)
-        tg      = PublicHolidaySpecification.new(:name => 'Thanksgiving Day', :years => :all, :month => 11, :day => :last_thursday)
-        summer  = PublicHolidaySpecification.new(:name => 'Summer Bank Holiday', :years => :all, :month => 8, :day => :last_monday)
-        spring  = PublicHolidaySpecification.new(:name => 'Spring Bank Holiday', :years => :all, :month => 5, :day => :last_monday)
-        newyear = PublicHolidaySpecification.new(:name => "New Year's Day", :years => :all, :month => 1, :day => 1)
-        olympic = PublicHolidaySpecification.new(:name => 'Olympics Day', :years => 2012, :month => 8, :day => 12)
+        # # create a working day schema with three public holidays, and weekends on Saturday, Sunday
+        @xmas    = PublicHolidaySpecification.new(:name => 'Christmas Day', :years => :all, :month => 12, :day => 25, :carry_forward => true)
+        @box     = PublicHolidaySpecification.new(:name => 'Boxing Day', :years => :all, :month => 12, :day => 26, :carry_forward => true)
+        @mayday  = PublicHolidaySpecification.new(:name => 'May Day', :years => :all, :month => 5, :day => :first_monday, :carry_forward => true)
+        @tg      = PublicHolidaySpecification.new(:name => 'Thanksgiving Day', :years => :all, :month => 11, :day => :last_thursday)
+        @summer  = PublicHolidaySpecification.new(:name => 'Summer Bank Holiday', :years => :all, :month => 8, :day => :last_monday)
+        @spring  = PublicHolidaySpecification.new(:name => 'Spring Bank Holiday', :years => :all, :month => 5, :day => :last_monday)
+        @newyear = PublicHolidaySpecification.new(:name => "New Year's Day", :years => :all, :month => 1, :day => 1)
+        @olympic = PublicHolidaySpecification.new(:name => 'Olympics Day', :years => 2012, :month => 8, :day => 12)
         
-        @cal = HolidayCalendar.new(:mode => :array, 
-                                   :territory => :uk, 
-                                   :weekend => [0,6], 
-                                   :specs => [xmas, mayday, tg, box, newyear, spring, olympic, summer])
-                                   
+        @cal = HolidayCalendar.create(:uk, [0,6], [@xmas, @mayday, @tg, @box, @newyear, @spring, @olympic, @summer])
+                                           
         @yaml_filename = File.dirname(__FILE__) + '/test.yaml'
     end
     
@@ -47,15 +44,56 @@ class HolidayCalendarTest < Test::Unit::TestCase
     
     
     
-    ############# tests 
+    ############# tests for create method ####################
     
-    def test_exception_raised_if_no_filename_parameter_passed_to_new_in_yaml_mode
+    def test_holiday_object_created_from_array_gives_expected_results
+        # given a HolidayCalendar instantiated with the create method
+        @cal
+        
+        # when I query the object 
+        # I should get expected results
+        assert_true @cal.weekend?(Date.new(2009, 8, 22)), 'Saturday 22 Aug 2009 not recognised as a weekend'
+        assert_true @cal.weekend?(Date.new(2009, 8, 23)), 'Sunday 23 Aug 2009 not recognised as a weekend'
+        assert_false @cal.working_day?(Date.new(2009, 8, 22)), 'Saturday 22 Aug 2009 erroneously recognised as a working day'
+        assert_true @cal.public_holiday?(Date.new(2009, 8, 31)), 'August Bank holiday not recognised as a public holiday'
+        assert_false @cal.working_day?(Date.new(2009, 8, 31)), 'August Bank holiday erroneously recognised as a working day'
+        assert_true @cal.public_holiday?(Date.new(2012, 8, 13)), 'August 13 2012 (Olympics day carried forward from 12th) not recognised as a public holiday'
+        assert_false @cal.public_holiday?(Date.new(2011, 8, 13)), 'August 12 2011 erroneously recognised as a public holiday'
+    end
+    
+    
+    def test_holiday_calendar_created_with_day_names_gives_expected_results
+        # given a HolidayCalendar created with weekends specified as day names
+        cal = HolidayCalendar.create(:test, ['Thursday', 'Friday'], [@xmas, @box])
+
+        # when I read the weekend day numbers, they should be 4 and 5
+        assert_equal [4,5], cal.weekend
+    end
+    
+    
+    def test_holiday_calendar_created_with_invalid_objects_throws_an_exception
         err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :yaml, :xxx => 'yyy')
+            cal = HolidayCalendar.create('string', ['x', 'y'], ['a', 'b', 'c'])
         end
-        assert_equal 'The following mandatory keys were not passed to HolidayCalendar.new in :yaml mode: :filename', err.message
-    end   
+        assert_equal 'territory must be specified as symbol in HolidayCalendar.create', err.message
+        
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.create(:test, [45.3, 'y'], ['a', 'b', 'c'])
+        end
+        assert_equal 'Invalid weekend array passsed to HolidayCalendar.create: each day must be day number in range 0-6 or day name', err.message        
+        
+        err = assert_raise ArgumentError do
+            cal = HolidayCalendar.create(:test, ['Saturday', 6], ['a', 'b', 'c'])
+        end
+        assert_equal 'public holidays must be an array of PublicHolidaySpecification objects in HolidayCalendar.create', err.message        
+    end
     
+    
+    
+    
+    
+    
+   ############### tests for load_file method
     
     def test_exception_thrown_when_no_territory_setting_supplied_in_yaml_file
         # given a yaml file with no territory section
@@ -66,7 +104,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
         # when I try to instantiate a HolidayCalendar from the file
         # I should get an exception
         err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+            cal = HolidayCalendar.load_file(@yaml_filename)
         end
         assert_equal "YAML file #{@yaml_filename} does not have a 'territory' setting", err.message
     end
@@ -81,7 +119,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
         # when I try to instantiate a HolidayCalendar from the file
         # I should get an exception
         err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+            cal = HolidayCalendar.load_file(@yaml_filename)
         end
         assert_equal "YAML file #{@yaml_filename} does not have a 'weekend' setting", err.message
     end    
@@ -95,7 +133,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
         # when I try to instantiate a HolidayCalendar from the file
         # I should get an exception
         err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+            cal = HolidayCalendar.load_file(@yaml_filename)
         end
         assert_equal "Invalid YAML file element 'weekend' - must be an Array, is String", err.message
     end    
@@ -106,11 +144,11 @@ class HolidayCalendarTest < Test::Unit::TestCase
         setup_yaml_contents
         @yaml_contents['weekend'] = ['subbota', 'voskresseniye']
         save_yaml_contents
-
+    
         # when I try to instantiate a HolidayCalendar from the file
         # I should get an exception
         err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+            cal = HolidayCalendar.load_file(@yaml_filename)
         end
         assert_equal "Invalid day specified as weekend: subbota", err.message
     end        
@@ -120,10 +158,10 @@ class HolidayCalendarTest < Test::Unit::TestCase
         # given a yaml file with no weekend section
         setup_yaml_contents
         save_yaml_contents
-
+    
         # when I instantiate a HolidayCalendar from a yaml file
-        cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
-
+        cal = HolidayCalendar.load_file(@yaml_filename)
+    
         # the weekend should be setup correctly
         assert_equal [6,0],  cal.weekend
     end    
@@ -138,7 +176,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
         # when I try to instantiate a HolidayCalendar from the file
         # I should get an exception
         err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+            cal = HolidayCalendar.load_file(@yaml_filename)
         end
         assert_equal "YAML file #{@yaml_filename} does not have a 'public_holidays' setting", err.message
     end
@@ -153,206 +191,165 @@ class HolidayCalendarTest < Test::Unit::TestCase
         # when I try to instantiate a HolidayCalendar from the file
         # I should get an exception
         err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
+            cal = HolidayCalendar.load_file(@yaml_filename)
         end
         assert_equal "Invalid YAML file element 'public_holidays' - must be an Hash, is String", err.message
     end
     
     
-    def test_that_holidays_are_setup_as_expected_from_yaml_file
-        # given a yaml file
-        setup_yaml_contents
-        save_yaml_contents
-        
-        # when I instantiate a Holiday Calendar from it
-        cal = HolidayCalendar.new(:mode => :yaml, :filename => @yaml_filename)
-        # Then the first monday in may should be a public holiday
-        assert_true cal.public_holiday?(Date.new(2009, 5, 4))
-        
-        # new Year's day should be a holiday
-        assert_true cal.public_holiday?(Date.new(2009, 1, 1))
-        
-        # Good Friday should be a public holiday
-        assert_true cal.public_holiday?(Date.new(2009, 4, 10))
-
-
-        # saturdays and sundays should be weekends
-        assert_true cal.weekend?(Date.new(2009, 8, 15))
-        assert_true cal.weekend?(Date.new(2009, 8, 16))
-        
-        # evrything else should be a working day
-        assert_true cal.working_day?(Date.new(2009, 8, 13))
-        
-    end
+     def test_that_holidays_are_setup_as_expected_from_yaml_file
+         # given a yaml file
+         setup_yaml_contents
+         save_yaml_contents
+         
+         # when I instantiate a Holiday Calendar from it
+         cal = HolidayCalendar.load_file(@yaml_filename)
+         # Then the first monday in may should be a public holiday
+         assert_true cal.public_holiday?(Date.new(2009, 5, 4))
+         
+         # new Year's day should be a holiday
+         assert_true cal.public_holiday?(Date.new(2009, 1, 1))
+         
+         # Good Friday should be a public holiday
+         assert_true cal.public_holiday?(Date.new(2009, 4, 10))
+     
+     
+         # saturdays and sundays should be weekends
+         assert_true cal.weekend?(Date.new(2009, 8, 15))
+         assert_true cal.weekend?(Date.new(2009, 8, 16))
+         
+         # evrything else should be a working day
+         assert_true cal.working_day?(Date.new(2009, 8, 13))
+         
+     end
+     
     
     
-    
-    def test_exception_thrown_if_no_territory_param_passed_in_std_config_mode
-        err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :std_config, :unknown_param => :uk)
-        end
-        assert_equal 'No territory specified for HolidayCalendar.new in std_config mode', err.message  
-    end
+    ################## test load method
     
     
     def test_loading_from_std_config_gives_expected_results
         # given a holiday calendar loaded from a standard config for france
-        cal = HolidayCalendar.new(:mode => :std_config, :territory => :fr)
+        cal = HolidayCalendar.load(:fr)
         
         # when I test french holiday dates, then they should be holidays
         assert_true cal.public_holiday?(Date.new(2009, 7, 14))
+        assert_true cal.public_holiday?(Date.new(2008,1,1))
     end
               
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
     def test_exception_raised_if_filename_specifies_non_existing_file_in_yaml_mode
         err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :yaml, :filename => 'i_do_not_exist.yaml')
+            cal = HolidayCalendar.load_file('i_do_not_exist.yaml')
         end
         assert_equal 'The filename specified in HolidayCalender.new cannot be found: i_do_not_exist.yaml', err.message
     end    
     
 
-    def test_exception_raised_if_no_mode_parameter_passed_to_new
-        err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:blah => :blah)
-        end
-        assert_equal 'No :mode parameter passed to HolidayCalendar.new', err.message
-    end
-    
-    
-    def test_exception_thrown_if_invalid_mode_parameter_passed_to_new
-        err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :xxxx)
-        end
-        assert_equal 'Invalid :mode parameter passed to HolidayCalendar.new: :xxxx', err.message
-    end
-        
-        
-    def test_exception_thrown_if_unknown_option_passed_to_new
-        err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :array, :invalid_option => :value)
-        end
-        assert_equal "Invalid key passed to HolidayCalendar.new in :array mode: invalid_option", err.message
-    end        
-        
-        
-    def test_exception_thrown_if_option_missing
-        err = assert_raise ArgumentError do
-            cal = HolidayCalendar.new(:mode => :array, :territory => :uk)
-        end
-        assert_equal "The following mandatory keys were not passed to HolidayCalendar.new in :array mode: weekend, specs", err.message
-    end    
-        
-        
-        
-    
-    
     def test_is_weekend_returns_true_for_weekends
-           # given a working day schema where saturdays and sundays are weekends
-           # when I ask whether a saturday is a weekend,I shoudl get true
-           assert_true @cal.weekend?(Date.new(2009, 8, 15))
-           assert_true @cal.weekend?(Date.new(2009, 8, 16))
-           
-           assert_false @cal.weekend?(Date.new(2009, 8, 14))
-           assert_false @cal.weekend?(Date.new(2009, 8, 14))        
-       end
+       # given a working day schema where saturdays and sundays are weekends
+       # when I ask whether a saturday is a weekend,I shoudl get true
+       assert_true @cal.weekend?(Date.new(2009, 8, 15))
+       assert_true @cal.weekend?(Date.new(2009, 8, 16))
        
+       assert_false @cal.weekend?(Date.new(2009, 8, 14))
+       assert_false @cal.weekend?(Date.new(2009, 8, 14))        
+   end
+   
+   
+   def test_public_holidays_are_recognised
+       # given a working day schema with 8 public holidays
+       # when I ask whether Christmas day is a public holiday, it should give true
+       assert_true @cal.public_holiday?(Date.new(2007, 12, 25))
        
-       def test_public_holidays_are_recognised
-           # given a working day schema with 8 public holidays
-           # when I ask whether Christmas day is a public holiday, it should give true
-           assert_true @cal.public_holiday?(Date.new(2007, 12, 25))
-           
-           # when I ask whether or not the 28th is a public holiday, it should give false
-           assert_false @cal.public_holiday?(Date.new(2007, 12, 28))
+       # when I ask whether or not the 28th is a public holiday, it should give false
+       assert_false @cal.public_holiday?(Date.new(2007, 12, 28))
+   
+       # when I ask whether Monday 7th May 2012 is a public holiday, it should reply true  (it's the first monday)
+       assert_true @cal.public_holiday?(Date.new(2012, 5, 7))
+       
+       # when I ask if the next day is a public holiday it should say false
+       assert_false @cal.public_holiday?(Date.new(2012, 5, 8))
+       
+       # when I ask if 26th November 2009 is a holiday, it should say true (it's the last thursday)
+       assert_true @cal.public_holiday?(Date.new(2009, 11, 26))
+       
+       # but false for the next day
+       assert_false @cal.public_holiday?(Date.new(2009, 11, 27))
+   end
+   
+   
+   
+   def test_working_day_returns_false_if_its_a_weekend
+       assert_false @cal.working_day?(Date.new(2009, 8, 15))            # Saturday
+       assert_false @cal.working_day?(Date.new(2009, 8, 16))            # Sunday
+   end
+   
+   
+   def test_exception_raised_if_start_date_passed_to_count_working_days_between_not_before_end_date
+        err = assert_raise ArgumentError do
+              @cal.count_working_days_between(Date.new(2009, 12, 25), Date.new(2009, 12, 24))      
+        end
+        assert_equal "start_date passed to HolidayCalendar.count_days_between() is not before end_date", err.message
+    end
     
-           # when I ask whether Monday 7th May 2012 is a public holiday, it should reply true  (it's the first monday)
-           assert_true @cal.public_holiday?(Date.new(2012, 5, 7))
-           
-           # when I ask if the next day is a public holiday it should say false
-           assert_false @cal.public_holiday?(Date.new(2012, 5, 8))
-           
-           # when I ask if 26th November 2009 is a holiday, it should say true (it's the last thursday)
-           assert_true @cal.public_holiday?(Date.new(2009, 11, 26))
-           
-           # but false for the next day
-           assert_false @cal.public_holiday?(Date.new(2009, 11, 27))
-       end
-       
-       
-       
-       def test_working_day_returns_false_if_its_a_weekend
-           assert_false @cal.working_day?(Date.new(2009, 8, 15))            # Saturday
-           assert_false @cal.working_day?(Date.new(2009, 8, 16))            # Sunday
-       end
-       
-       
-       def test_exception_raised_if_start_date_passed_to_count_working_days_between_not_before_end_date
-           err = assert_raise ArgumentError do
-                 @cal.count_working_days_between(Date.new(2009, 12, 25), Date.new(2009, 12, 24))      
-           end
-           assert_equal "start_date passed to HolidayCalendar.count_days_between() is not before end_date", err.message
-       end
-       
-       
-       
-       def test_count_working_days_between_two_dates
-           # given two dates Wed 23rd Dec and WEdnesday 30th Dec 2009
-           start_date = Date.new(2009, 12, 23)
-           end_date = Date.new(2009, 12, 30)
-           
-           # when I count the working days betwen them, it should give me 4 (Christmas day, Boxing Day and Saturday and Sunday are not working days)
-           assert_equal 3, @cal.count_working_days_between(start_date, end_date)
-       end
-       
-       
-       
-       def test_counting_forward_days_with_no_weekend
-           start_date = Date.new(2009, 8, 10)              # monday
-           target_end_date = Date.new(2009, 8, 14)         # friday
-           
-           assert_equal target_end_date, @cal.working_days_after(start_date, 4)
-       end
-       
-       
-       def test_counting_forward_days_with_weekend
-           start_date = Date.new(2009, 8, 10)              # monday
-           target_end_date = Date.new(2009, 8, 19)         # friday
     
-           assert_equal target_end_date, @cal.working_days_after(start_date, 7)
-       end        
-       
-                  
-       
-       def test_counting_backward_days_with_no_weekend
-           start_date = Date.new(2009, 8, 14)              # friday
-           target_end_date = Date.new(2009, 8, 10)         # monday
-           
-           actual_end_date = @cal.working_days_before(start_date, 4)
-           assert_equal target_end_date, actual_end_date, "Target end date: #{target_end_date}, actual: #{actual_end_date}"
-       end
-       
-       
-       def test_counting_forward_with_weekend_and_holiday
-           start_date = Date.new(2009, 4, 28)          # wed 29th apr
-           target_end_date = Date.new(2009, 5, 6)      # wed 6th may  (monday 4th is holiday)
     
-           actual_end_date = @cal.working_days_after(start_date, 5)
-           assert_equal target_end_date, actual_end_date, "Target end date: #{target_end_date}, actual: #{actual_end_date}"
-       end
-       
+    def test_count_working_days_between_two_dates
+        # given two dates Wed 23rd Dec and WEdnesday 30th Dec 2009
+        start_date = Date.new(2009, 12, 23)
+        end_date = Date.new(2009, 12, 30)
+        
+        # when I count the working days betwen them, it should give me 4 (Christmas day, Boxing Day and Saturday and Sunday are not working days)
+        assert_equal 3, @cal.count_working_days_between(start_date, end_date)
+    end
+    
+    
+    
+    def test_counting_forward_days_with_no_weekend
+        start_date = Date.new(2009, 8, 10)              # monday
+        target_end_date = Date.new(2009, 8, 14)         # friday
+        
+        assert_equal target_end_date, @cal.working_days_after(start_date, 4)
+    end
+    
+    
+    def test_counting_forward_days_with_weekend
+        start_date = Date.new(2009, 8, 10)              # monday
+        target_end_date = Date.new(2009, 8, 19)         # friday
+    
+        assert_equal target_end_date, @cal.working_days_after(start_date, 7)
+    end        
+    
+               
+    
+    def test_counting_backward_days_with_no_weekend
+        start_date = Date.new(2009, 8, 14)              # friday
+        target_end_date = Date.new(2009, 8, 10)         # monday
+        
+        actual_end_date = @cal.working_days_before(start_date, 4)
+        assert_equal target_end_date, actual_end_date, "Target end date: #{target_end_date}, actual: #{actual_end_date}"
+    end
+    
+    
+    def test_counting_forward_with_weekend_and_holiday
+        start_date = Date.new(2009, 4, 28)          # wed 29th apr
+        target_end_date = Date.new(2009, 5, 6)      # wed 6th may  (monday 4th is holiday)
+    
+        actual_end_date = @cal.working_days_after(start_date, 5)
+        assert_equal target_end_date, actual_end_date, "Target end date: #{target_end_date}, actual: #{actual_end_date}"
+    end
+    
+    
+    
+    def test_holiday_name_returns_expected_holiday_name
+        assert_equal 'Christmas Day', @cal.holiday_name(Date.new(2009, 12, 25))
+        assert_equal 'Boxing Day (carried forward from Sat 26 Dec 2009)', @cal.holiday_name(Date.new(2009, 12, 28))
+        assert_equal 'Boxing Day', @cal.holiday_name(Date.new(2009, 12, 28), false)
+        assert_nil @cal.holiday_name(Date.new(2008, 8, 21))
+    end
+    
 end
         
         

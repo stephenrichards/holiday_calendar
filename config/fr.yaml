@@ -7,7 +7,7 @@ weekend:
 public_holidays:
     jour de l'an:
         years: all
-        month: 5
+        month: 1
         day: 1
         carry_forward: false
 

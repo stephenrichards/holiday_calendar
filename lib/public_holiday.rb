@@ -48,6 +48,16 @@ class PublicHoliday
     end
     
     
+    def name(carry_forward_text = true)
+        description = @name
+        if carry_forward_text  && @carry_forward_text
+            description += " (#{@carry_forward_text})"
+        end
+        description        
+    end
+    
+    
+    
     # returns true if the PublicHolidaySpecification results in a holiday for this year.
     def holiday?
         @holiday
