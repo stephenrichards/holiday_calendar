@@ -64,44 +64,7 @@ class HolidayCalendar
         cal
     end
         
-       
-    
-    
-   # instantiate a HolidayCalendar object
-   #
-   # params
-   # * options: a hash of keywords in one of the following three styles
-   #   * :mode => std_config, :territory => :xx
-   #   * :mode => yaml, :filename => 'path/to/yaml/file'
-   #   * :mode => array, :territory => :xx, :weekend => [n, n], :specs => [phs1, phs2, phs3, ...]
-   #
-    # def self.initializex(options)
-    #         @territory                      = nil
-    #         @weekend                       = nil
-    #         @public_holiday_specifications  = nil
-    #         @generated_years                = Array.new
-    #         @public_holiday_collection      = Array.new
-    #         @public_holiday_hash            = Hash.new
-    #         
-    #         if !options.has_key?(:mode)
-    #             raise ArgumentError.new("No :mode parameter passed to HolidayCalendar.new")
-    #         end
-    #         
-    #         case options[:mode]
-    #         when :std_config
-    #             instantiate_from_std_config(options)
-    #         when :yaml
-    #             instantiate_from_yaml(options)
-    #         when :array
-    #             instantiate_from_array(options)
-    #         else
-    #             raise ArgumentError.new("Invalid :mode parameter passed to HolidayCalendar.new: #{options[:mode].inspect}")
-    #         end
-    #     end
-         
-    
-    
-    
+
 
     # returns true if the specified date is a weekend
     def weekend?(date)
