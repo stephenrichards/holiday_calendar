@@ -17,8 +17,8 @@ class HolidayCalendarTest < Test::Unit::TestCase
         @tg      = PublicHolidaySpecification.new(:name => 'Thanksgiving Day', :years => :all, :month => 11, :day => :last_thursday)
         @summer  = PublicHolidaySpecification.new(:name => 'Summer Bank Holiday', :years => :all, :month => 8, :day => :last_monday)
         @spring  = PublicHolidaySpecification.new(:name => 'Spring Bank Holiday', :years => :all, :month => 5, :day => :last_monday)
-        @newyear = PublicHolidaySpecification.new(:name => "New Year's Day", :years => :all, :month => 1, :day => 1)
-        @olympic = PublicHolidaySpecification.new(:name => 'Olympics Day', :years => 2012, :month => 8, :day => 12)
+        @newyear = PublicHolidaySpecification.new(:name => "New Year's Day", :years => :all, :month => 1, :day => 1, :carry_forward => true)
+        @olympic = PublicHolidaySpecification.new(:name => 'Olympics Day', :years => 2012, :month => 8, :day => 12, :carry_forward => true)
         
         @cal = HolidayCalendar.create(:uk, [0,6], [@xmas, @mayday, @tg, @box, @newyear, @spring, @olympic, @summer])
                                            
@@ -246,6 +246,49 @@ class HolidayCalendarTest < Test::Unit::TestCase
         assert_equal 'The filename specified in HolidayCalender.new cannot be found: i_do_not_exist.yaml', err.message
     end    
     
+    
+    
+    def test_adding_one_extra_holiday_works_as_expected
+        # given a Holiday Calendar which has been queried for 2009 and 2012
+        assert_true @cal.public_holiday?(Date.new(2009, 12, 25))
+        assert_false @cal.public_holiday?(Date.new(2012, 2, 1))
+        
+        # when I add an extra holiday
+        @cal << PublicHolidaySpecification.new(:name => 'My Birthday', :years => :all, :month => 8, :day => 13)
+
+        # then that day should be a holiday in years that have previously been queried and other years
+        assert_true @cal.public_holiday?(Date.new(2009, 8, 13))
+        assert_true @cal.public_holiday?(Date.new(2010, 8, 13))
+        assert_true @cal.public_holiday?(Date.new(2012, 8, 13))
+    end
+        
+        
+    def test_adding_an_array_of_extra_holidays_works_as_exptected
+        # given a Holiday Calendar which has been queried for 2009 and 2012
+        assert_true @cal.public_holiday?(Date.new(2009, 12, 25))
+        assert_false @cal.public_holiday?(Date.new(2012, 2, 1))
+
+        # when I add an array of extra holidays
+        ph1 = PublicHolidaySpecification.new(:name => 'My Birthday', :years => :all, :month => 8, :day => 13)
+        ph2 = PublicHolidaySpecification.new(:name => "Tony's Birthday", :years => :all, :month => 5, :day => 17, :carry_forward => false)
+        ph3 = PublicHolidaySpecification.new(:name => "Charles' Birthday", :years => :all, :month => 4, :day => 3)
+        @cal << [ph1, ph2, ph3]
+        
+        # then that those days should be a holiday in years that have previously been queried and other years
+        assert_true @cal.public_holiday?(Date.new(2009, 8, 13))
+        assert_true @cal.public_holiday?(Date.new(2010, 8, 13))
+        assert_true @cal.public_holiday?(Date.new(2012, 8, 13))
+        assert_true @cal.public_holiday?(Date.new(2010, 5, 17))
+        assert_true @cal.public_holiday?(Date.new(2012, 5, 17))     
+        assert_true @cal.public_holiday?(Date.new(2009, 4, 3))
+        assert_true @cal.public_holiday?(Date.new(2012, 4, 3))   
+        
+        # and the pre-existing holidays should still be recognised as such
+        assert_true @cal.public_holiday?(Date.new(2011, 12, 26))    
+        
+    end        
+        
+        
 
     def test_is_weekend_returns_true_for_weekends
        # given a working day schema where saturdays and sundays are weekends

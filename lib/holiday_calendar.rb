@@ -53,7 +53,25 @@ class HolidayCalendar
         cal
     end
     
-     
+    
+    # adds a new PublicHolidaySpecification or Array of PublicHollidaySpecifications to the Holiday Calendar  
+    def <<(phs)
+        if phs.is_a? PublicHolidaySpecification
+            phs_array = [phs]
+        else
+            phs_array = phs
+        end
+        
+        if !all_occurrances_of(PublicHolidaySpecification, phs_array)
+            raise ArgumentError.new('you must pass a PublicHolidaySpecification or an array of PublicHolidaySpecification objects to << method of HolidayCalendar')
+        end
+        
+        @public_holiday_specifications += phs_array
+        @generated_years.clear
+        @public_holiday_collection.clear
+    end
+             
+        
     
     
    
@@ -160,6 +178,18 @@ class HolidayCalendar
     
     
     private
+    
+    # returns true if array contains only instances of klass
+    def all_occurrances_of(klass, array)
+        array.each do |instance|
+            if !instance.instance_of?(klass)
+                return false
+            end
+        end
+        return true
+    end
+    
+    
     
     # read all yaml files in the config directory looking for one with a territory of the specified name, 
     # and load it
@@ -337,7 +367,7 @@ class HolidayCalendar
     # and carry forward is set to true, moves it to the next available work day
     def adjust_carry_forwards
         @public_holiday_collection.each do |ph|
-            if weekend?(ph.date)
+            if weekend?(ph.date)  && ph.carry_forward?
                 new_date = next_working_day_after(ph.date)
                 @public_holiday_hash.delete(ph.date)
                 ph.carry_forward_text = "carried forward from #{ph.date.strftime('%a %d %b %Y')}"
