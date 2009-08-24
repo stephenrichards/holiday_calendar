@@ -7,7 +7,8 @@ class PublicHoliday
     include Comparable
     
     attr_reader     :year
-    attr_accessor   :name, :date, :carry_forward_text
+    attr_accessor   :date, :carry_forward_text
+    attr_writer     :name
 
     
     # Instantiates a PublicHoliday object

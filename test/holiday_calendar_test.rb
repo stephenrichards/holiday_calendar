@@ -48,7 +48,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
     
     def test_holiday_object_created_from_array_gives_expected_results
         # given a HolidayCalendar instantiated with the create method
-        @cal
+        # @cal
         
         # when I query the object 
         # I should get expected results
