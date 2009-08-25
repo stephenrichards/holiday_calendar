@@ -63,6 +63,25 @@ class HolidayCalendarTest < Test::Unit::TestCase
     end
     
     
+    
+    def test_list_for_year_produces_exected_results
+        # given @call setup as standard
+        # when I call list_for_year
+        # I should get an array of strings representing the holidays in date order
+        
+        expected  = Array.new
+        expected << "Thu 01 Jan 2009 : New Year's Day"
+        expected << "Mon 04 May 2009 : May Day"
+        expected << "Mon 25 May 2009 : Spring Bank Holiday"
+        expected << "Mon 31 Aug 2009 : Summer Bank Holiday"
+        expected << "Thu 26 Nov 2009 : Thanksgiving Day"
+        expected << "Fri 25 Dec 2009 : Christmas Day"
+        expected << "Mon 28 Dec 2009 : Boxing Day (carried forward from Sat 26 Dec 2009)"
+
+        assert_equal expected, @cal.list_for_year(2009)
+    end
+    
+    
     def test_holiday_calendar_created_with_day_names_gives_expected_results
         # given a HolidayCalendar created with weekends specified as day names
         cal = HolidayCalendar.create(:test, ['Thursday', 'Friday'], [@xmas, @box])
@@ -88,8 +107,6 @@ class HolidayCalendarTest < Test::Unit::TestCase
         end
         assert_equal 'public holidays must be an array of PublicHolidaySpecification objects in HolidayCalendar.create', err.message        
     end
-    
-    
     
     
     
@@ -230,12 +247,50 @@ class HolidayCalendarTest < Test::Unit::TestCase
     
     
     def test_loading_from_french_std_config_gives_expected_results
+        
         # given a holiday calendar loaded from a standard config for france
         cal = HolidayCalendar.load(:fr)
         
         # when I test french holiday dates, then they should be holidays
-        assert_true cal.public_holiday?(Date.new(2009, 7, 14))
-        assert_true cal.public_holiday?(Date.new(2008,1,1))
+        nyd = Date.new(2010, 1, 1)
+        assert_true cal.public_holiday?(nyd)
+        assert_equal "Jour de l'An", cal.holiday_name(nyd)
+        
+        em = Date.new(2010, 4, 5)
+        assert_true cal.public_holiday?(em)
+        assert_equal 'lundi de Pâques', cal.holiday_name(em)
+        
+        ld = Date.new(2009, 5, 1)
+        assert_true cal.public_holiday?(ld)
+        assert_equal 'Fête du Travail', cal.holiday_name(ld)
+        
+        ved = Date.new(2009, 5, 8)
+        assert_true cal.public_holiday?(ved)
+        assert_equal 'Fête de la Victoire 1945', cal.holiday_name(ved)        
+        
+        ad = Date.new(2009, 5, 21)
+        assert_true cal.public_holiday?(ad)
+        assert_equal 'Ascension catholique', cal.holiday_name(ad)
+        
+        wm = Date.new(2009, 6, 1)
+        assert_true cal.public_holiday?(wm)
+        assert_equal 'Lundi de Pentecôte', cal.holiday_name(wm)
+        
+        fn = Date.new(2009, 7, 14)
+        assert_true cal.public_holiday?(fn)
+        assert_equal 'Fête nationale', cal.holiday_name(fn)
+        
+        ts = Date.new(2010, 11, 1)
+        assert_true cal.public_holiday?(ts)
+        assert_equal 'Toussaint', cal.holiday_name(ts)
+        
+        arm = Date.new(2009, 11, 11)
+        assert_true cal.public_holiday?(arm)
+        assert_equal "Armistice", cal.holiday_name(arm)
+        
+        xmas = Date.new(2009, 12, 25)
+        assert_true cal.public_holiday?(xmas)
+        assert_equal 'Noel', cal.holiday_name(xmas)
     end
     
     

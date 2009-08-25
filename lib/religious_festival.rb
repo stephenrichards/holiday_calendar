@@ -87,7 +87,7 @@ class ReligiousFestival
     # Determines the date of Ascension Day for a given year.
     #
     def self.ascension_day(some_year)
-      easter(some_year) - 39
+      easter(some_year) + 39
     end
 
 
@@ -96,6 +96,16 @@ class ReligiousFestival
     #
     def self.pentecost(some_year)
       easter(some_year) + 49
+    end
+    
+    
+    def self.whit_sunday(some_year)
+        easter(some_year) + 49
+    end
+    
+    
+    def self.whit_monday(some_year)
+        easter(some_year) + 50
     end
     
     

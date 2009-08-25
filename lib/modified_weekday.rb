@@ -42,6 +42,11 @@ class ModifiedWeekday
     end
     
     
+    def to_s
+        @modifier.to_s + "_" + @weekday_name.to_s
+    end
+    
+    
     
     def sort_value
         sort_val = @weekday_occurrance * 10

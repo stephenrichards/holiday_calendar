@@ -5,19 +5,19 @@ weekend:
     - sunday
 
 public_holidays:
-    jour de l'an:
+    Jour de l'An:
         years: all
         month: 1
         day: 1
         carry_forward: false
 
-    fête du travail:
+    Fête du Travail:
         years: all
         month: 5
         day: 1
         carry_forward: false
 
-    fin de la 2ème guerre mondiale:
+    Fête de la Victoire 1945:
         years: all
         month: 5
         day: 8
@@ -25,21 +25,26 @@ public_holidays:
 
     lundi de Pâques:
         years: all
-        class_method: ReligiousFestival.easter
+        class_method: ReligiousFestival.easter_monday
         carry_forward: false
 
-    jeudi de l'Ascension:
+    Ascension catholique:
         years: all
         class_method: ReligiousFestival.ascension_day
         carry_forward: false
+        
+    Lundi de Pentecôte:
+        years: all
+        class_method: ReligiousFestival.whit_monday
+        carry_forward: false
 
-    fête nationale:
+    Fête nationale:
         years: all
         month: 7
         day: 14
         carry_forward: false
 
-    assomption:
+    Assomption:
         years: all
         month: 8
         day: 15
@@ -51,7 +56,7 @@ public_holidays:
         day: 1
         carry_forward: false
  
-    armistice:
+    Armistice:
         years: all
         month: 11
         day: 11

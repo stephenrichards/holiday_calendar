@@ -66,24 +66,11 @@ class PublicHolidaySpecification
     
     
     
-    
-    
-    
-    
     def uses_class_method?
         @uses_class_method
     end
 
-    
-    # def working_day?(date)
-    #     !public_holiday?(date)
-    # end
-    # 
-    # 
-    # # returns true if the given date does correspond to this PublicHolidaySpecification
-    # def public_holiday?(date)
-    #     public_holiday_on_actual_date?(date)
-    # end
+
 
 
     # returns true if the years value for this PublicHolidaySpecification includes the specified year.
@@ -106,23 +93,21 @@ class PublicHolidaySpecification
     end
     
     
-    
-    private
-    
-    
-    # def generate_sort_value
-    #     sort_value = @month * 100
-    #     if @day.is_a? Fixnum
-    #         sort_value += @day
-    #     else
-    #         sort_value += @day.sort_value
-    #     end
-    #     sort_value
-    # end
+    # displays human_readable form of 
+    def to_s
+        str = @name + "\n"
+        str += sprintf("  %014s: %s\n", 'years', @years)
+        if @uses_class_method
+            str += sprintf("  %14s: %s.%s\n\n", 'class_method', @klass, @method_name)
+        else
+            str += sprintf("  %14s: %s\n", 'month', @month)
+            str += sprintf("  %14s: %s\n", 'day', @day)
+            str += sprintf("  %14s: %s\n\n", 'carry_forward', @carry_forward)
+        end
+    end
         
     
-    
-    
+    private
     def public_holiday_on_actual_date?(date)
         result = false
         if @years.include?(date.year)  && @month == date.month
@@ -235,9 +220,6 @@ class PublicHolidaySpecification
         @carry_forward = value
     end
         
-        
-        
-    
     
         
     def any_mandatory_params_nil?

@@ -186,11 +186,22 @@ class HolidayCalendar
     end    
     
     
+    # lists all the specifications as an array of multi-line strings
+    def list
+        specs = Array.new
+        @public_holiday_specifications.each { |phs| specs << phs.to_s }
+        specs
+    end
+    
+    
+    # lists the public holiday dates for a particular year
     def list_for_year(year)
         populate_public_holiday_collection_for_year(year)
+        holiday_dates = Array.new
         @public_holiday_collection.each do |ph|
-            puts ph
+            holiday_dates << ph.to_s if ph.year == year
         end
+        holiday_dates
     end
     
     
