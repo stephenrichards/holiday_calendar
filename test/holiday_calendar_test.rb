@@ -21,6 +21,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
         @olympic = PublicHolidaySpecification.new(:name => 'Olympics Day', :years => 2012, :month => 8, :day => 12, :carry_forward => true)
         
         @cal = HolidayCalendar.create(:uk, [0,6], [@xmas, @mayday, @tg, @box, @newyear, @spring, @olympic, @summer])
+        @num_public_holidays = @cal.size
                                            
         @yaml_filename = File.dirname(__FILE__) + '/test.yaml'
     end
@@ -228,7 +229,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
     ################## test load method
     
     
-    def test_loading_from_std_config_gives_expected_results
+    def test_loading_from_french_std_config_gives_expected_results
         # given a holiday calendar loaded from a standard config for france
         cal = HolidayCalendar.load(:fr)
         
@@ -236,6 +237,38 @@ class HolidayCalendarTest < Test::Unit::TestCase
         assert_true cal.public_holiday?(Date.new(2009, 7, 14))
         assert_true cal.public_holiday?(Date.new(2008,1,1))
     end
+    
+    
+    def test_loading_from_uk_std_config_gives_expected_results
+        # given a holiday calendar loaded from a standard config for france
+        cal = HolidayCalendar.load(:uk)
+        
+        # when I test UK holiday dates, then they should be holidays
+        assert_true cal.public_holiday?(Date.new(2010, 1, 1))
+        assert_equal "New Year's Day", cal.holiday_name(Date.new(2010, 1, 1))
+        
+        assert_true cal.public_holiday?(Date.new(2010, 4, 2))
+        assert_equal "Good Friday", cal.holiday_name(Date.new(2010, 4, 2))
+        
+        assert_true cal.public_holiday?(Date.new(2010, 4, 5))
+        assert_equal "Easter Monday", cal.holiday_name(Date.new(2010, 4, 5))
+        
+        assert_true cal.public_holiday?(Date.new(2010, 5, 3))
+        assert_equal 'May Day', cal.holiday_name(Date.new(2010, 5, 3))
+        
+        assert_true cal.public_holiday?(Date.new(2010, 5, 31))
+        assert_equal "Spring Bank Holiday", cal.holiday_name(Date.new(2010, 5, 31))
+        
+        assert_true cal.public_holiday?(Date.new(2010, 8, 30))
+        assert_equal "Summer Bank Holiday", cal.holiday_name(Date.new(2010, 8, 30))
+        
+        assert_true cal.public_holiday?(Date.new(2010, 12, 27))
+        assert_equal "Christmas Day (carried forward from Sat 25 Dec 2010)", cal.holiday_name(Date.new(2010, 12, 27))
+        
+        assert_true cal.public_holiday?(Date.new(2010, 12, 28))
+        assert_equal "Boxing Day (carried forward from Sun 26 Dec 2010)", cal.holiday_name(Date.new(2010, 12, 28))
+    end    
+    
               
     
 
@@ -287,6 +320,77 @@ class HolidayCalendarTest < Test::Unit::TestCase
         assert_true @cal.public_holiday?(Date.new(2011, 12, 26))    
         
     end        
+        
+        
+    def test_adding_an_object_which_isnt_a_public_holiday_specification_throws_an_exception
+        err = assert_raise ArgumentError do
+            @cal << {:key1=> :val1, :key2 => :val2}
+        end
+        assert_equal(
+            'you must pass a PublicHolidaySpecification or an array of PublicHolidaySpecification objects to << method of HolidayCalendar', 
+            err.message)
+    end
+    
+    
+    def test_adding_an_array_of_objects_that_arent_all_public_holiday_specications_throws_an_exception
+        err = assert_raise ArgumentError do
+            @cal << [@tg, @mayday, 'another Holiday', @xmas]
+        end
+        assert_equal(
+            'you must pass a PublicHolidaySpecification or an array of PublicHolidaySpecification objects to << method of HolidayCalendar', 
+            err.message)
+    end
+    
+    
+    
+    def test_deleting_a_holiday_works_as_expected
+        # given the standard calendar which reports boxing day and Christmas day as a holiday and has seven public holidays
+        assert_true @cal.public_holiday?(Date.new(2009, 12, 28)), '28 Dec 2009 (boxing Day carried forward) is not reported as a holiday'
+        assert_true @cal.public_holiday?(Date.new(2011, 12, 26))
+        assert_true @cal.public_holiday?(Date.new(2009, 12, 25))
+        assert_equal @num_public_holidays, @cal.size
+        
+        # when I delete boxing day
+        result = @cal.delete('Boxing Day')
+        
+        # then result should be true indicating that boxing day has been found
+        # the number of public holidays should be decreased by 1
+        # boxing day should no longer be a holiday but other holidays should remain
+        assert_true result
+        assert_equal @num_public_holidays - 1, @cal.size
+        assert_false @cal.public_holiday?(Date.new(2009, 12, 28)), '28 Dec 2009 (boxing Day carried forward) is reported as a holiday after deletion'
+        assert_false @cal.public_holiday?(Date.new(2012, 12, 26)), '26 Dec 2011 (boxing Day ) is reported as a holiday after deletion'
+        assert_true @cal.public_holiday?(Date.new(2009, 12, 25)), 'Christmas day 2009 is not reported as a holiday after deletion of boxing day'
+    end
+    
+    
+    def test_attempting_to_delete_a_non_existent_public_holiday_results_in_false
+        # given the standard calendar or 8 public holidays
+        assert_equal @num_public_holidays, @cal.size
+        
+        # when I delete a holiday that doesn't exist
+        result = @cal.delete('My Birthday')
+        
+        # the result should be false and the number of holidays should remain unchanged
+        assert_false result
+        assert_equal @num_public_holidays, @cal.size
+    end
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        
         
         
 

@@ -72,6 +72,31 @@ class HolidayCalendar
     end
              
         
+    # deletes a public holiday by names from the holiday calendar.
+    # 
+    # params
+    # * public_holiday_name: a string containing the name of the public holiday to be deleted
+    #
+    # returns
+    # * true if a public holiday with that name existed in the calendar and was deleted
+    # * false if no public holiday with that name was found in the calendar
+    #
+    def delete(public_holiday_name)
+        holiday_found = false
+        index = 0
+        @public_holiday_specifications.each do |phs|
+            if phs.name == public_holiday_name
+                holiday_found = true
+                break
+            end
+            index += 1
+        end
+        @public_holiday_specifications.delete_at(index)
+        @generated_years.clear
+        @public_holiday_collection.clear
+        holiday_found
+    end
+    
     
     
    
@@ -82,6 +107,10 @@ class HolidayCalendar
         cal
     end
         
+    # returns the count of public holidays 
+    def size
+        @public_holiday_specifications.size
+    end
 
 
     # returns true if the specified date is a weekend
