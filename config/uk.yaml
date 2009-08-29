@@ -10,6 +10,9 @@ public_holidays:
         years: all
         month: 1
         day: 1
+        # take_after:
+        #     - saturday
+        #     - sunday
         
     Good Friday:
         years: all

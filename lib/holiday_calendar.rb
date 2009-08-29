@@ -53,6 +53,17 @@ class HolidayCalendar
         cal
     end
     
+  
+    # Instantiates a HolidayCalendar object from a yaml file containing the definition of holiday specifications.
+    def self.load_file(filename)
+        cal = self.new
+        self.instantiate_from_yaml(cal, filename)
+        cal
+    end    
+    
+    
+    
+    
     
     # adds a new PublicHolidaySpecification or Array of PublicHollidaySpecifications to the Holiday Calendar  
     def <<(phs)
@@ -99,13 +110,7 @@ class HolidayCalendar
     
     
     
-   
-    # Instantiates a HolidayCalendar object from a yaml file containing the definition of holiday specifications.
-    def self.load_file(filename)
-        cal = self.new
-        self.instantiate_from_yaml(cal, filename)
-        cal
-    end
+
         
     # returns the count of public holidays 
     def size
@@ -360,27 +365,11 @@ class HolidayCalendar
         raise ArgumentError.new('Invalid weekend array passsed to HolidayCalendar.create: each day must be day number in range 0-6 or day name')
     end
     
+
     
-    
-    
-    # def validate_keys_for_array_mode(options)
-    #     valid_keys = [:mode, :territory, :weekend, :specs]
-    #     options.keys.each do |key|
-    #         if !valid_keys.include?(key)
-    #             raise ArgumentError.new("Invalid key passed to HolidayCalendar.new in :array mode: #{key}")
-    #         end
-    #         valid_keys.delete(key)
-    #     end
-    #     if valid_keys.size != 0
-    #         raise ArgumentError.new("The following mandatory keys were not passed to HolidayCalendar.new in :array mode: #{valid_keys.join(', ')}")
-    #     end
-    # end
-    
-    
-    
-    
-    
-    # 
+    #  for the specified year, iterates through the collection of public holiday specifications and
+    #  generates a PublicHoliday object for each one for the specified year and adds it to the collection
+    #  of public holidays.
     def populate_public_holiday_collection_for_year(year)
         return if @generated_years.include?(year)                   # don't generate if we've already done it
         @public_holiday_specifications.each do |phs|

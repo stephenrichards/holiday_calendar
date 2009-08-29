@@ -19,11 +19,13 @@ class PublicHolidaySpecification
     # * years:          Either :all, a single year, or a range. Mandatory.
     # * month:          Either an English month name, or month number in range 1-12.  Mandatory.
     # * day:            Either a number, or a phrase like :first_monday, :third_tuesday, :last_thursday.  Mandatory.
-    # * carry_forward:  Either true or false.  If true, and the holiday falls on a weekend, the holiday is carried over
-    #   to the next working day.  Optional; if not supplied, false is assumed                   
+    # * take_after:     An array, specifying the names or the numbers of the days on which, if the holiday falls on this day, will
+    #                   be taken on the first working day after.  Defaults to an empty array, i.e., no adjustment takes place.
+    # * take_before:    An array, specifying the names or the numbers of the days on which, if the holiday falls on this day, will
+    #                   be taken on the last working day before.  Defaults to an empty array, i.e., no adjustment takes place.              
     #
     # e.g.
-    #                   phs = PublicHolidaySpecification.new(:name => 'Christmas', :years => :all, :month => 12, :day => 25, :carry_forward => true)
+    #                   phs = PublicHolidaySpecification.new(:name => 'Christmas', :years => :all, :month => 12, :day => 25, :take_after => ['saturday', 'sunday'])
     #
     # or
     # * name:           Name given to this public holiday.  Mandatory.
@@ -41,10 +43,10 @@ class PublicHolidaySpecification
         @uses_class_method  = false
         @klass              = nil
         @method_name        = nil
-        @carry_forward      = false
+        @take_after         = Array.new
+        @take_before        = Array.new
         
         validate_params(params)
-        # @sort_value = generate_sort_value
     end
     
     
@@ -135,8 +137,10 @@ class PublicHolidaySpecification
                 @month = validate_month(value)
             when :day
                 @day = validate_day(value)
-            when :carry_forward
-                @carry_forward = validate_carry_forward(value)
+            when :take_before
+                @take_before = validate_take_before_after(value)
+            when take_after
+                @take_after = validate_take_before_after(value)
             when :class_method
                 validate_class_method(value)
             else
@@ -212,14 +216,65 @@ class PublicHolidaySpecification
         end
     end
     
-    
-    def validate_carry_forward(value)
-        if !value.is_a?(TrueClass)  &&  !value.is_a?(FalseClass)
-            raise ArgumentError.new(':carry_forward value passed to PublicHolidaySpecification.new must be true or false')
+    # 
+    # def validate_carry_forward(value)
+    #     if !value.is_a?(TrueClass)  &&  !value.is_a?(FalseClass)
+    #         raise ArgumentError.new(':carry_forward value passed to PublicHolidaySpecification.new must be true or false')
+    #     end
+    #     @carry_forward = value
+    # end
+        
+    # validates parameters passed with the take_before or take_after keywords, and returns an array of day numbers
+    def validate_take_before_after(day_array)
+        if !day_array.is_a? Array
+            raise ArgumentError.new('take_before or take_after parameters must be an array')
         end
-        @carry_forward = value
+        
+        day_number_array = Array.new
+        day_array.each do |day|
+            day_number_array << validate_day_name_or_number(day)
+        end
+        day_number_array
+    end
+    
+    
+    def validate_day_name_or_number(day)
+        day_number = nil
+        if day.is_a? Fixnum
+            day_number = validate_day_number(day)
+        else 
+            day_number = validate_day_name(day)
+        end
+        day_number
+    end     
+    
+    
+    def validate_day_number(day)
+        if day < 0 || day > 6
+            raise ArgumentError.new('day number passed as take_before and take_after parameters must be in range 0-6')
+        end
+        day
+    end
+    
+    
+    def validate_day_name(day)
+        day_number = nil
+        if day.is_a? String
+            day_sym = day.downcase.to_sym
+        end
+        if !day.is_a? Symbol
+            raise ArgumentError.new("day passed totake_before and take_after must be a Number, String or Symbol.  Is #{day.class}")
+        end
+        day_number = @@valid_day_names.index(day)
+        if day_number.nil
+            raise ArgumentError.new("#{day} is not a valid day name")
+        end
+        day_number
     end
         
+        
+        
+    
     
         
     def any_mandatory_params_nil?
