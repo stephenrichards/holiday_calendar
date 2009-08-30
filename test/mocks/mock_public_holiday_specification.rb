@@ -3,6 +3,6 @@
 
 class MockPublicHolidaySpecification < PublicHolidaySpecification
     
-    attr_reader :years, :month, :day
+    attr_reader :years, :month, :day, :take_before, :take_after
 end
     

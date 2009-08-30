@@ -11,6 +11,8 @@ class PublicHolidaySpecification
     @@month_names = {'January' => 1, 'February' => 2, 'March' => 3, 'April'=> 4,
                      'May' => 5, 'June' => 6, 'July' => 7, 'August' => 8,
                      'September' => 9, 'October' => 10, 'November' => 11, 'December' => 12}
+                     
+    @@valid_day_names = [:sunday, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
     
     # Instantiates a PublicHolidaySpecification object.
     #
@@ -139,7 +141,7 @@ class PublicHolidaySpecification
                 @day = validate_day(value)
             when :take_before
                 @take_before = validate_take_before_after(value)
-            when take_after
+            when :take_after
                 @take_after = validate_take_before_after(value)
             when :class_method
                 validate_class_method(value)
@@ -261,12 +263,13 @@ class PublicHolidaySpecification
         day_number = nil
         if day.is_a? String
             day_sym = day.downcase.to_sym
+        elsif !day.is_a? Symbol
+            raise ArgumentError.new("day passed to take_before and take_after must be a Number, String or Symbol.  Is #{day.class}")
+        else
+            day_sym = day
         end
-        if !day.is_a? Symbol
-            raise ArgumentError.new("day passed totake_before and take_after must be a Number, String or Symbol.  Is #{day.class}")
-        end
-        day_number = @@valid_day_names.index(day)
-        if day_number.nil
+        day_number = @@valid_day_names.index(day_sym)
+        if day_number.nil?
             raise ArgumentError.new("#{day} is not a valid day name")
         end
         day_number
