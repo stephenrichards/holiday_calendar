@@ -7,7 +7,7 @@ class PublicHoliday
     include Comparable
     
     attr_reader     :year
-    attr_accessor   :date, :carry_forward_text
+    attr_accessor   :date, :date_adjusted_text
     attr_writer     :name
 
     
@@ -24,8 +24,10 @@ class PublicHoliday
         @holiday = false
         @date = nil
         @name = nil
-        @carry_forward = false
-        @carry_forward_text = nil
+        @take_before = Array.new
+        @take_after = Array.new
+        @date_adjusted = false
+        @date_adjusted_text = nil
         
         if public_holiday_specification.applies_to_year?(year)
             @holiday = true
@@ -39,35 +41,55 @@ class PublicHoliday
     end
     
     
-    # returns the date and name of the holiday, and optionally, the carry forward text if any.
-    def to_s(carry_forward_text = true)
-        description = "#{@date.strftime("%a %d %b %Y")} : #{@name}"
-        if carry_forward_text  && @carry_forward_text
-            description += " (#{@carry_forward_text})"
-        end
+    # returns the date and name of the holiday, and optionally, the date adjustedtext if any.
+    def to_s(date_adjusted_text = true)
+        description = "#{@date.strftime("%a %d %b %Y")} : #{self.name}"
+        # if date_adjusted_text  && @date_adjusted
+        #     description += " (#{@date_adjusted_text})"
+        # end
         description
     end
     
     
-    def name(carry_forward_text = true)
+    def name(date_adjusted_text = true)
         description = @name
-        if carry_forward_text  && @carry_forward_text
-            description += " (#{@carry_forward_text})"
+        if date_adjusted_text  && @date_adjusted
+            description += " (#{@date_adjusted_text})"
         end
         description        
     end
     
     
     
-    # returns true if the PublicHolidaySpecification results in a holiday for this year.
+    # returns true if the day number of the holiday date is in the taken_before array
+    def must_be_taken_before?
+        return true if @take_before.include? @date.wday
+        return false
+    end
+    
+    
+    
+    def must_be_taken_after?
+        return true if @take_after.include? @date.wday
+        return false
+    end
+
+
     def holiday?
         @holiday
     end
-    
 
 
-    def carry_forward?
-        @carry_forward
+
+    def adjust_date(new_date)
+        @date_adjusted = true
+        if new_date > @date
+            direction = 'carried'
+        else
+            direction  = 'brought'
+        end
+        @date_adjusted_text = "#{direction} forward from #{@date.strftime('%a %d %b %Y')}"
+        @date = new_date
     end
 
 
@@ -82,7 +104,9 @@ class PublicHoliday
        else
            @date = generate_date_from_expression(phs, year)
        end
-       @carry_forward = phs.carry_forward?
+       
+       @take_before = phs.take_before
+       @take_after = phs.take_after
    end
            
 

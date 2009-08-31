@@ -11,14 +11,59 @@ class HolidayCalendarTest < Test::Unit::TestCase
     
     def setup
         # # create a working day schema with three public holidays, and weekends on Saturday, Sunday
-        @xmas    = PublicHolidaySpecification.new(:name => 'Christmas Day', :years => :all, :month => 12, :day => 25, :carry_forward => true)
-        @box     = PublicHolidaySpecification.new(:name => 'Boxing Day', :years => :all, :month => 12, :day => 26, :carry_forward => true)
-        @mayday  = PublicHolidaySpecification.new(:name => 'May Day', :years => :all, :month => 5, :day => :first_monday, :carry_forward => true)
-        @tg      = PublicHolidaySpecification.new(:name => 'Thanksgiving Day', :years => :all, :month => 11, :day => :last_thursday)
-        @summer  = PublicHolidaySpecification.new(:name => 'Summer Bank Holiday', :years => :all, :month => 8, :day => :last_monday)
-        @spring  = PublicHolidaySpecification.new(:name => 'Spring Bank Holiday', :years => :all, :month => 5, :day => :last_monday)
-        @newyear = PublicHolidaySpecification.new(:name => "New Year's Day", :years => :all, :month => 1, :day => 1, :carry_forward => true)
-        @olympic = PublicHolidaySpecification.new(:name => 'Olympics Day', :years => 2012, :month => 8, :day => 12, :carry_forward => true)
+        @xmas    = PublicHolidaySpecification.new(
+                        :name           => 'Christmas Day', 
+                        :years          => :all, 
+                        :month          => 12, 
+                        :day            => 25, 
+                        :take_after     => ['Saturday', 'Sunday'])
+                        
+        @box     = PublicHolidaySpecification.new(
+                        :name           => 'Boxing Day', 
+                        :years          => :all, 
+                        :month          => 12, 
+                        :day            => 26, 
+                        :take_after     => [0,6])
+                        
+        @mayday  = PublicHolidaySpecification.new(
+                        :name           => 'May Day', 
+                        :years          => :all, 
+                        :month          => 5, 
+                        :day            => :first_monday, 
+                        :take_after     => [:saturday, :sunday])
+                        
+        @tg      = PublicHolidaySpecification.new(
+                        :name           => 'Thanksgiving Day', 
+                        :years          => :all, 
+                        :month          => 11, 
+                        :day            => :last_thursday)
+                                    
+        @summer  = PublicHolidaySpecification.new(
+                        :name           => 'Summer Bank Holiday', 
+                        :years          => :all, 
+                        :month          => 8, 
+                        :day            => :last_monday)
+                        
+        @spring  = PublicHolidaySpecification.new(
+                        :name           => 'Spring Bank Holiday', 
+                        :years          => :all, 
+                        :month          => 5, 
+                        :day            => :last_monday)
+                        
+        @newyear = PublicHolidaySpecification.new(
+                        :name           => "New Year's Day", 
+                        :years          => :all, 
+                        :month          => 1, 
+                        :day            => 1, 
+                        :take_after     => [:saturday, :sunday])
+                        
+        @olympic = PublicHolidaySpecification.new(
+                        :name           => 'Olympics Day', 
+                        :years          => 2012, 
+                        :month          => 8, 
+                        :day            => 12, 
+                        :take_after     => [:sunday],
+                        :take_before    => [:saturday])
         
         @cal = HolidayCalendar.create(:uk, [0,6], [@xmas, @mayday, @tg, @box, @newyear, @spring, @olympic, @summer])
         @num_public_holidays = @cal.size
@@ -358,7 +403,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
 
         # when I add an array of extra holidays
         ph1 = PublicHolidaySpecification.new(:name => 'My Birthday', :years => :all, :month => 8, :day => 13)
-        ph2 = PublicHolidaySpecification.new(:name => "Tony's Birthday", :years => :all, :month => 5, :day => 17, :carry_forward => false)
+        ph2 = PublicHolidaySpecification.new(:name => "Tony's Birthday", :years => :all, :month => 5, :day => 17, :take_after => [0,6])
         ph3 = PublicHolidaySpecification.new(:name => "Charles' Birthday", :years => :all, :month => 4, :day => 3)
         @cal << [ph1, ph2, ph3]
         

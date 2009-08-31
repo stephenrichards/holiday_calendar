@@ -10,9 +10,9 @@ public_holidays:
         years: all
         month: 1
         day: 1
-        # take_after:
-        #     - saturday
-        #     - sunday
+        take_after:
+            - saturday
+            - sunday
         
     Good Friday:
         years: all
@@ -41,10 +41,14 @@ public_holidays:
         years: all
         month: 12
         day: 25
-        carry_forward: true
+        take_after:
+            - saturday
+            - sunday        
         
     Boxing Day:
         years: all
         month: 12
         day: 26
-        carry_forward: yes
+        take_after:
+            - saturday
+            - sunday

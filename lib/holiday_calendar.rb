@@ -210,13 +210,13 @@ class HolidayCalendar
     end
     
     
-    def holiday_name(date, carry_forward_text = true)
+    def holiday_name(date, date_adjusted_text = true)
         populate_public_holiday_collection_for_year(date.year)
         ph = @public_holiday_hash[date]
         if ph.nil?
             return nil
         else
-            return ph.name(carry_forward_text)
+            return ph.name(date_adjusted_text)
         end
     end
     
@@ -392,16 +392,26 @@ class HolidayCalendar
     end
     
     
-    # iterates through the public_holiday_collection, and where a public holiday falls on a weekend
-    # and carry forward is set to true, moves it to the next available work day
+    # iterates through the public_holiday_collection, and where a public holiday falls on a day
+    # which is in the take_before or take_after array, then adjusts the date accordingly
     def adjust_carry_forwards
         @public_holiday_collection.each do |ph|
-            if weekend?(ph.date)  && ph.carry_forward?
+            if ph.must_be_taken_after?
                 new_date = next_working_day_after(ph.date)
                 @public_holiday_hash.delete(ph.date)
-                ph.carry_forward_text = "carried forward from #{ph.date.strftime('%a %d %b %Y')}"
-                ph.date = new_date
+                ph.adjust_date(new_date)
+                # ph.date_adjusted_text = "carried forward from #{ph.date.strftime('%a %d %b %Y')}"
+                # ph.date_adjusted = true
+                # ph.date = new_date
                 @public_holiday_hash[new_date] = ph
+            elsif ph.must_be_taken_before?
+                new_date = last_working_day_before(ph.date)
+                @public_holiday_hash.delete(ph.date)
+                ph.adjust_date(new_date)
+                # ph.date_adjusted_text = "brought forward from #{ph.date.strftime('%a %d %b %Y')}"
+                # ph.date_adjusted = true
+                # ph.date = new_date
+                @public_holiday_hash[new_date] = ph            
             end
         end
     end
@@ -414,6 +424,16 @@ class HolidayCalendar
            date += 1
        end
        date
+    end
+    
+    
+    
+    def last_working_day_before(date)
+        date -= 1
+        while !working_day?(date) do
+            date -= 1
+        end
+        date
     end
 
 

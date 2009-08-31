@@ -5,7 +5,7 @@ require File.dirname(__FILE__) + '/modified_weekday'
 class PublicHolidaySpecification
     include Enumerable
     
-    attr_reader     :name, :day, :month, :uses_class_method, :klass, :method_name
+    attr_reader     :name, :day, :month, :uses_class_method, :klass, :method_name, :take_before, :take_after
     
     
     @@month_names = {'January' => 1, 'February' => 2, 'March' => 3, 'April'=> 4,

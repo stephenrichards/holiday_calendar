@@ -203,7 +203,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
     
     def test_default_take_before_is_empty_arry
        # given a public holiday specification without take before specified
-       phs =  MockPublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13)  
+       phs =  PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13)  
        
        # when I see the take_before attribute, it should be an empty array
        assert_equal Array.new, phs.take_before
@@ -211,7 +211,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
     
    def test_default_take_after_is_empty_arry
        # given a public holiday specification without take before specified
-       phs =  MockPublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13)  
+       phs =  PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13)  
        
        # when I see the take_after attribute, it should be an empty array
        assert_equal Array.new, phs.take_after
@@ -219,7 +219,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
    
    def test_take_before_parameters_are_turned_into_valid_day_numbers
        # given a public holiday specification with a take_before parameter of saturday, sunday
-       phs =  MockPublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13,
+       phs =  PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13,
                         :take_before => ['Saturday', 'Sunday'])
 
        # when I see the take_after attribute, it should be an array of 6,0
@@ -229,12 +229,26 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
  
    def test_take_before_parameters_are_turned_into_valid_day_numbers
        # given a public holiday specification with a take_before parameter of saturday, sunday
-       phs =  MockPublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13,
+       phs =  PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13,
                         :take_after => ['Saturday', 'Sunday'])
 
        # when I see the take_after attribute, it should be an array of 6,0
        assert_equal [6,0], phs.take_after
    end 
- 
+   
+   
+   def test_take_before_raises_exception_if_given_non_array
+       err = assert_raise ArgumentError do
+           phs = PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13, :take_before => 'Saturday')  
+       end
+       assert_equal 'take_before or take_after parameters must be an array', err.message
+   end
+   
+   def test_take_before_raises_exception_if_given_day_numbers_out_of_range
+       err = assert_raise ArgumentError do
+           phs = PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13, :take_before => [0,7])  
+       end
+       assert_equal 'day number passed as take_before and take_after parameters must be in range 0-6', err.message
+   end   
   
 end

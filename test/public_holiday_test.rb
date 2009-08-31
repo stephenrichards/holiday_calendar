@@ -156,6 +156,42 @@ class PublicHolidayTest < Test::Unit::TestCase
         assert_equal "Thu 26 Aug 2010 : Late Summer Bank Holiday", ph.to_s
     end
         
+    
+    
+    def test_must_be_taken_before_returns_true_for_day_numbers_in_the_taken_before_array
+        # given a public holiday with days 4 and 5 in the taken_before array
+        phs = PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13, :take_before => [:thursday, :friday])
+        ph  = PublicHoliday.new(phs, 2009)
         
+        # when I call must_+be_taken_before?, it should return true
+        assert_true ph.must_be_taken_before?
+    end
+    
+    def test_must_be_taken_before_returns_false_for_day_numbers_in_the_taken_before_array
+        # given a public holiday with days 4 and 5 in the taken_before array
+        phs = PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 15, :take_before => [:thursday, :friday])
+        ph  = PublicHoliday.new(phs, 2009)
+        
+        # when I call must_+be_taken_before?, it should return true
+        assert_false ph.must_be_taken_before?
+    end      
+    
+    def test_must_be_taken_after_returns_true_for_day_numbers_in_the_taken_before_array
+        # given a public holiday with days 4 and 5 in the taken_before array
+        phs = PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13, :take_after => [:thursday, :friday])
+        ph  = PublicHoliday.new(phs, 2009)
+        
+        # when I call must_+be_taken_before?, it should return true
+        assert_true ph.must_be_taken_after?
+    end
+    
+    def test_must_be_taken_after_returns_false_for_day_numbers_in_the_taken_before_array
+        # given a public holiday with days 4 and 5 in the taken_before array
+        phs = PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 15, :take_after => [:thursday, :friday])
+        ph  = PublicHoliday.new(phs, 2009)
+        
+        # when I call must_+be_taken_before?, it should return true
+        assert_false ph.must_be_taken_after?
+    end  
     
 end
