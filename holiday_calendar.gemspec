@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
     s.name = %q{holiday_calendar}
-    s.version = "0.0.1"
+    s.version = "1.0.2"
 
     s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
     s.authors = ["Stephen Richards"]
@@ -9,10 +9,29 @@ Gem::Specification.new do |s|
     s.description = %q{Helper class for determining which days are public holidays in different countries, calcluating the working days between two dates, etc}
     s.email = ["stephen@stephenrichards.eu"]
     #s.executables = ["mindy"]
-    s.files = [TO BE FILLED OUT]
-    s.has_rdoc = false
-    s.homepage = %q{http://www.clara.net}
-    s.rdoc_options = ["--inline-source", "--charset=UTF-8", "--exclude=.yml", "--exclude=.crt", "--exclude=.wsdl", "--exclude=.ru"]
+    s.files = [
+            'lib/holiday_calendar.rb', 
+            'lib/modified_weekday.rb', 
+            'lib/public_holiday.rb', 
+            'lib/public_holiday_specification.rb',
+            'lib/religious_festival.rb', 
+            'config/fr.yaml', 
+            'config/uk.yaml', 
+            'config/us.yaml', 
+            'README.rb'
+        ]
+    s.has_rdoc = true
+    s.homepage = %q{http://www.stephenrichards.eu}
+    s.rdoc_options = [
+            "--inline-source", 
+            "--charset=UTF-8", 
+            "--exclude=.crt", 
+            "--exclude=.wsdl", 
+            "--exclude=.ru",
+            "-x lib/modified_weekday.rb",
+            "-x lib/public_holiday.rb",
+            "-m README.rb"
+        ]
     s.require_paths = ["lib"]
     s.rubygems_version = %q{1.3.0}
     s.summary = %q{Dynamic and Configurable International Public Holiday Calendar}

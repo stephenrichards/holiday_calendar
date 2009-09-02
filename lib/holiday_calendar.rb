@@ -1,3 +1,4 @@
+require File.dirname(__FILE__) + '/public_holiday_specification'
 require File.dirname(__FILE__) + '/public_holiday'
 require File.dirname(__FILE__) + '/religious_festival'
 require 'yaml'

@@ -8,7 +8,7 @@ task :doc do
     doc_dir = "#{File.dirname(__FILE__)}/doc"
     system "rm -r #{doc_dir}" if File.exist?(doc_dir)
     
-    system 'rdoc -x test -x lib/modified_weekday.rb -x lib/public_holiday.rb  -S -N -m README'
+    system 'rdoc -x test -x lib/modified_weekday.rb -x lib/public_holiday.rb  -S -N -m README.rb'
     puts "Documentation generation complete"
     puts "Documentation can be viewed at file://#{File.dirname(__FILE__)}/doc/index.html"
      
