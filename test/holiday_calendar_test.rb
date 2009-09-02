@@ -369,7 +369,69 @@ class HolidayCalendarTest < Test::Unit::TestCase
         assert_equal "Boxing Day (carried forward from Sun 26 Dec 2010)", cal.holiday_name(Date.new(2010, 12, 28))
     end    
     
-              
+             
+    def test_take_before_when_take_before_means_last_day_of_previous_year
+        # given a holiday of January 1st and is taken before if falling on a Saturday
+        phs = PublicHolidaySpecification.new(:name => 'test', :years => :all, :day => 1, :month => 1, :take_before => [:saturday])
+        cal = HolidayCalendar.create(:us, [0,6], [phs])
+        
+        # when I test to see if Friday 31st December 2010 is a holiday (1st Jan 2011 is a saturday)
+        # it should say yes
+        assert_true cal.public_holiday?(Date.new(2010, 12,31))
+    end
+        
+                 
+    def test_loading_us_calendar_for_2009_gives_expected_results
+        # given a holiday calendar loaded from the standard config for the US
+        cal = HolidayCalendar.load(:us)
+        
+        # New Year's day dates for years 2009 - 2013
+        nyd_dates = [ [2009,1,1],  [2010,1,1], [2010,12,31],  [2012,1,2],  [2013,1,1] ]
+        assert_holidays nyd_dates, cal, "New Year's Day"
+        
+        mlk_dates = [ [2009,1,19], [2010,1,18], [2011,1,17], [2012,1,16], [2013,1,21 ]]
+        assert_holidays mlk_dates, cal, 'Birthday of Martin Luther King, Jr.'
+        
+        wb_dates = [ [2009,2,16], [2010,2,15], [2011,2,21], [2012,2,20], [2013,2,18] ]
+        assert_holidays wb_dates, cal, "Washington's Birthday"   
+        
+        md_dates = [ [2009,5,25], [2010,5,31], [2011,5,30], [2012,5,28], [2013,5,27] ]
+        assert_holidays md_dates, cal, 'Memorial Day'
+        
+        id_dates = [ [2009,7,3], [2010,7,5], [2011,7,4], [2012,7,4], [2013,7,4] ]
+        assert_holidays id_dates, cal, 'Independence Day'
+        
+        ld_dates = [ [2009,9,7], [2010,9,6], [2011,9,5], [2012,9,3], [2013,9,2] ]
+        assert_holidays ld_dates, cal, 'Labor Day'
+        
+        cd_dates = [ [2009,10,12], [2010,10,11], [2011,10,10], [2012,10,8], [2013,10,14] ]
+        assert_holidays cd_dates, cal, 'Columbus Day'    
+        
+        vd_dates = [ [2009,11,11], [2010,11,11], [2011,11,11], [2012,11,12], [2013,11,11] ]
+        assert_holidays vd_dates, cal, "Veterans' Day"    
+        
+        tgd_dates = [ [2009,11,26], [2010,11,25], [2011,11,24], [2012,11,22], [2013,11,28] ]   
+        assert_holidays tgd_dates, cal, "Thanksgiving Day" 
+        
+        xmas_dates = [ [2009,12,25], [2010,12,24], [2011,12,26], [2012,12,25], [2013,12,25] ]   
+        assert_holidays xmas_dates, cal, "Christmas Day"      
+    end 
+    
+#  [ [2009], [2010], [2011], [2012], [2013] ]
+    
+    
+    def assert_holidays(holiday_dates, cal, holiday_name)
+        holiday_dates.each do |holiday_date|
+            date = arr2date(holiday_date)
+            assert_true cal.public_holiday?(date), "#{date} not recognised as #{holiday_name}"
+            assert_match /^#{holiday_name}/, cal.holiday_name(date)
+        end
+    end
+    
+    
+    def arr2date(array)
+        Date.new(array[0], array[1], array[2])
+    end
     
 
     def test_exception_raised_if_filename_specifies_non_existing_file_in_yaml_mode

@@ -140,8 +140,10 @@ class HolidayCalendar
     
         
     # returns true if the specified date is neither a weekend nor a public holiday
-    def working_day?(date)
-        populate_public_holiday_collection_for_year(date.year)
+    def working_day?(date, repopulate = true)
+        if repopulate
+            populate_public_holiday_collection_for_year(date.year)
+        end
         !weekend?(date) && !public_holiday?(date)
     end
         
@@ -367,9 +369,11 @@ class HolidayCalendar
     
 
     
-    #  for the specified year, iterates through the collection of public holiday specifications and
+    #  for the specified year  (and a year either side so as to cater for holidays that get taken before in the last day of the 
+    #  previous year, or taken after in the first day of the next year), iterates through the collection of public holiday 
+    #  specifications and
     #  generates a PublicHoliday object for each one for the specified year and adds it to the collection
-    #  of public holidays.
+    #  of public holidays.  
     def populate_public_holiday_collection_for_year(year)
         return if @generated_years.include?(year)                   # don't generate if we've already done it
         @public_holiday_specifications.each do |phs|
@@ -380,8 +384,28 @@ class HolidayCalendar
         @public_holiday_collection.sort!
         populate_public_holiday_hash
         adjust_carry_forwards
+        populate_holidays_brought_forward_from_next_year(year + 1)
     end
     
+    
+    # handles the edge case where early holidays in the following year are brought forward to this year.
+    # this method is called with the following year as a parameter
+    def populate_holidays_brought_forward_from_next_year(year)
+        return if @generated_years.include?(year)               # no need to do anything if the holidays have already been generated for this year
+        @public_holiday_specifications.each do |phs|
+            next if !phs.applies_to_year?(year)
+            ph = PublicHoliday.new(phs, year)
+            if ph.must_be_taken_before?
+                new_date = last_working_day_before(ph.date)
+                if new_date.year < ph.date.year
+                    ph.adjust_date(new_date)
+                    @public_holiday_hash[new_date] = ph
+                end
+            end
+        end
+    end
+
+
 
     # refreshes the public_holiday_hash based on the contents of the public_holiday_collection
     def populate_public_holiday_hash
@@ -400,19 +424,14 @@ class HolidayCalendar
                 new_date = next_working_day_after(ph.date)
                 @public_holiday_hash.delete(ph.date)
                 ph.adjust_date(new_date)
-                # ph.date_adjusted_text = "carried forward from #{ph.date.strftime('%a %d %b %Y')}"
-                # ph.date_adjusted = true
-                # ph.date = new_date
                 @public_holiday_hash[new_date] = ph
             elsif ph.must_be_taken_before?
                 new_date = last_working_day_before(ph.date)
                 @public_holiday_hash.delete(ph.date)
                 ph.adjust_date(new_date)
-                # ph.date_adjusted_text = "brought forward from #{ph.date.strftime('%a %d %b %Y')}"
-                # ph.date_adjusted = true
-                # ph.date = new_date
                 @public_holiday_hash[new_date] = ph            
             end
+            
         end
     end
             
