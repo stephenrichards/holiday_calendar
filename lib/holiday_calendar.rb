@@ -66,7 +66,11 @@ class HolidayCalendar
     
     
     
-    # adds a new PublicHolidaySpecification or Array of PublicHollidaySpecifications to the Holiday Calendar  
+    # Adds a new PublicHolidaySpecification or Array of PublicHollidaySpecifications to the Holiday Calendar  
+    #
+    # params
+    # * phs: must be a single PublicHolidaySpecification object or an array of PublicHolidaySpecification 
+    #   objects to be added to the calendar.
     def <<(phs)
         if phs.is_a? PublicHolidaySpecification
             phs_array = [phs]
@@ -84,7 +88,7 @@ class HolidayCalendar
     end
              
         
-    # deletes a public holiday by names from the holiday calendar.
+    # Deletes a public holiday by names from the holiday calendar.
     # 
     # params
     # * public_holiday_name: a string containing the name of the public holiday to be deleted
@@ -113,21 +117,23 @@ class HolidayCalendar
     
 
         
-    # returns the count of public holidays 
+    # Returns the count of public holidays 
+    #
     def size
         @public_holiday_specifications.size
     end
 
 
-    # returns true if the specified date is a weekend
+    # Returns true if the specified date is a weekend
+    #
     def weekend?(date)
         populate_public_holiday_collection_for_year(date.year)
         @weekend.include?(date.wday)
     end
     
     
-    # returns true if the specified date is a public holiday
-
+    # Returns true if the specified date is a public holiday
+    #
     def public_holiday?(date)
         return false if weekend?(date)                  # weekend are never public holidays
         populate_public_holiday_collection_for_year(date.year)
@@ -140,7 +146,8 @@ class HolidayCalendar
     
     
         
-    # returns true if the specified date is neither a weekend nor a public holiday
+    # Returns true if the specified date is neither a weekend nor a public holiday
+    #
     def working_day?(date, repopulate = true)
         if repopulate
             populate_public_holiday_collection_for_year(date.year)
@@ -149,7 +156,8 @@ class HolidayCalendar
     end
         
         
-    # returns the count of the number of working days between two dates (does not count the start date as 1 day). 
+    # Returns the count of the number of working days between two dates (does not count the start date as 1 day). 
+    #
     def count_working_days_between(start_date, end_date)
         populate_public_holiday_collection_for_year(start_date.year)
         populate_public_holiday_collection_for_year(end_date.year)
@@ -169,7 +177,7 @@ class HolidayCalendar
     
     
     
-    # returns a date a number of working days after a specified date
+    # Returns a date a number of working days after a specified date
     #
     # params
     # * start_date : the date at which to start counting
@@ -182,7 +190,7 @@ class HolidayCalendar
     
     
     
-    # returns a date a number of working days before a specified date
+    # Returns a date a number of working days before a specified date
     #
     # params
     # * start_date : the date at which to start counting
@@ -194,7 +202,8 @@ class HolidayCalendar
     end    
     
     
-    # lists all the specifications as an array of multi-line strings
+    # Returns an array of string descriptions of each of the PublicHolidaySpecifications in the calendar
+    #
     def list
         specs = Array.new
         @public_holiday_specifications.each { |phs| specs << phs.to_s }
@@ -202,7 +211,8 @@ class HolidayCalendar
     end
     
     
-    # lists the public holiday dates for a particular year
+    # Returns an array of strings giving the date and the name of the holiday for each holiday in the year
+    #
     def list_for_year(year)
         populate_public_holiday_collection_for_year(year)
         holiday_dates = Array.new
@@ -212,7 +222,14 @@ class HolidayCalendar
         holiday_dates
     end
     
-    
+    # Returns the name of the holiday for a particular date, or nil if the date is not a holiday
+    # 
+    # params
+    # * date: the date for which the holiday name is to be returned
+    # * date_adjusted_text: true, if the phrase 'carried forward from' or 'brought forward from' is to be included
+    #   in cases where the date of the holiday was adjusted because it fell on a weekend (or to be more precise, on 
+    #   a day specified in the take_before or take_after options of the PublicHolidaySpecification)
+    #
     def holiday_name(date, date_adjusted_text = true)
         populate_public_holiday_collection_for_year(date.year)
         ph = @public_holiday_hash[date]

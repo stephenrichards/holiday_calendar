@@ -70,7 +70,12 @@
 #           hols = sco.list_for_year(2010)
 #           hols.each { |h| puts h }
 #
+# == Feedback
 #
+# Feedback on this project is welcomed, particularly sets of rules for different countries, or useful additions.
+# please mail me at dev@stephenrichards.eu
+#
+# Stephen Richards
 
         
 

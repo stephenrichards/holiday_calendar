@@ -52,7 +52,7 @@ class PublicHolidaySpecification
     end
     
     
-    
+    # Instantiates a PublicHolidaySpecification from a yaml definition file
     def self.instantiate_from_yaml_definition(filename, name, yaml_spec)
         raise ArgumentError.new("Invalid definition of #{name} in public_holidays section of #{filename}") if !yaml_spec.is_a? Hash
         params = Hash.new
@@ -69,7 +69,7 @@ class PublicHolidaySpecification
     end
     
     
-    
+    # Returns true if a class method is used to calaculate the date a holiday falls on
     def uses_class_method?
         @uses_class_method
     end
@@ -77,27 +77,21 @@ class PublicHolidaySpecification
 
 
 
-    # returns true if the years value for this PublicHolidaySpecification includes the specified year.
+    # Returns true if the years value for this PublicHolidaySpecification includes the specified year.
     def applies_to_year?(year)
         @years.include?(year)
     end
     
     
-    # the sorting function is used in order to sort the public holiday specifications for one year into 
-    # order before generating the holiday calendar, to ensure that carry over holidays in succession
-    # get carried over properly  (e.g. DEc 25/26 falling on Sat / Sun get carried over to Mon / Tue)
+
     def <=>(other)
         self.sort_value <=> other.sort_value
     end
     
-    
-    # returns true if this holiday is carried forward to the next working day if it falls on a weekend
-    def carry_forward?
-        @carry_forward
-    end
+
     
     
-    # displays human_readable form of 
+    # Displays human_readable form of the PublicHolidaySpecification
     def to_s
         str = @name + "\n"
         str += sprintf("  %014s: %s\n", 'years', @years)
