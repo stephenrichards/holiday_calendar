@@ -1,0 +1,59 @@
+# holiday calendar schema for UK
+  
+territory: uk_en
+weekend:
+    - saturday
+    - sunday
+
+public_holidays:
+    New Year's Day:
+        years: all
+        month: 1
+        day: 1
+        take_after:
+            - saturday
+            - sunday
+        
+    Good Friday:
+        years: all
+        class_method: ReligiousFestival.good_friday
+        
+    Easter Monday:
+        years: all
+        class_method: ReligiousFestival.easter_monday
+        
+    May Day:
+        years: all
+        month: 5
+        day: first_monday
+        
+    Spring Bank Holiday:
+        years: all
+        month: 5
+        day: last_monday
+        
+    Summer Bank Holiday:
+        years: all
+        month: 8
+        day: last_monday
+        
+    Christmas Day:
+        years: all
+        month: 12
+        day: 25
+        take_after:
+            - saturday
+            - sunday        
+        
+    Boxing Day:
+        years: all
+        month: 12
+        day: 26
+        take_after:
+            - saturday
+            - sunday
+
+    Wedding of Prince William:
+        years: 2011
+        month: 4
+        day: 29
