@@ -5,7 +5,7 @@ require File.dirname(__FILE__) + '/work_day'
 # encapsulates the start and end times for a working day
 class WorkDay
     
-    attr_reader :start_time, :end_time
+    attr_reader :start_time, :end_time, :total_minutes
     
     def initialize(start_time, end_time)
         if start_time.nil? && end_time.nil?
@@ -20,6 +20,7 @@ class WorkDay
             @start_time = start_time
             @end_time = end_time
         end
+        @total_minutes = @end_time.minutes - @start_time.minutes
     end
     
     

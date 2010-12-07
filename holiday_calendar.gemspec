@@ -1,6 +1,9 @@
+require File.dirname(__FILE__) + '/lib/holiday_calendar_version'
+
+
 Gem::Specification.new do |s|
     s.name = %q{holiday_calendar}
-    s.version = "1.0.10"
+    s.version = HOLIDAY_CALENDAR_VERSION
 
     s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
     s.authors = ["Stephen Richards"]
@@ -10,12 +13,16 @@ Gem::Specification.new do |s|
     s.email = ["holiday_calendar@stephenrichards.eu"]
     #s.executables = ["mindy"]
     s.files = [
-            'README.rb',
+            'README',
+            'lib/holiday_calendar_version.rb',
             'lib/holiday_calendar.rb', 
             'lib/modified_weekday.rb', 
             'lib/public_holiday.rb', 
             'lib/public_holiday_specification.rb',
             'lib/religious_festival.rb', 
+            'lib/work_day.rb',
+            'lib/work_time.rb',
+            'lib/work_time_schedule.rb',
             'config/fr.yaml', 
             'config/uk.yaml', 
             'config/us.yaml'
@@ -23,12 +30,12 @@ Gem::Specification.new do |s|
     s.has_rdoc = true
     s.homepage = %q{http://www.stephenrichards.eu}
     s.extra_rdoc_files = [
-        'README.rb',
-        'config/uk.yaml',
+        'README',
+        'config/uk_en.yaml',
         'config/fr.yaml',
         'config/us.yaml'
         ]    
-    s.rdoc_options   << "--main" << "README.rb" <<
+    s.rdoc_options   << "--main" << "README" <<
                       "--inline-source" <<
                       "--charset" << "UTF-8" <<
                       "--exclude" <<  "lib/modified_weekday.rb" <<

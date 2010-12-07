@@ -1,6 +1,9 @@
 require File.dirname(__FILE__) + '/public_holiday_specification'
 require File.dirname(__FILE__) + '/public_holiday'
 require File.dirname(__FILE__) + '/religious_festival'
+require File.dirname(__FILE__) + '/work_time_schedule'
+require File.dirname(__FILE__) + '/holiday_calendar_version'
+
 require 'yaml'
 
 
@@ -17,6 +20,8 @@ class HolidayCalendar
     
     attr_accessor   :territory, :weekend, :public_holiday_specifications
     
+    
+    
     @@keys_for_std_config   = [:territory]
     @@keys_for_yaml         = [:filename]
     @@keys_for_array        = [:territory, :weekend, :specs]
@@ -32,6 +37,13 @@ class HolidayCalendar
         @public_holiday_collection      = Array.new
         @public_holiday_hash            = Hash.new    
     end
+    
+    
+    # returns version number of installed gem
+    def self.version
+        HOLIDAY_CALENDAR_VERSION
+    end
+    
     
     
     # Instantiates a HolidayCalendar object from the standard configuration file for the specified territory
@@ -61,10 +73,7 @@ class HolidayCalendar
         self.instantiate_from_yaml(cal, filename)
         cal
     end    
-    
-    
-    
-    
+
     
     # Adds a new PublicHolidaySpecification or Array of PublicHollidaySpecifications to the Holiday Calendar  
     #
@@ -127,14 +136,22 @@ class HolidayCalendar
     # Returns true if the specified date is a weekend
     #
     def weekend?(date)
+        date = to_date(date)
         populate_public_holiday_collection_for_year(date.year)
         @weekend.include?(date.wday)
+    end
+    
+    
+    # returns true if the specified day number is a weekend
+    def weekend_day_number?(day_number)
+        @weekend.include?(day_number)
     end
     
     
     # Returns true if the specified date is a public holiday
     #
     def public_holiday?(date)
+        date = to_date(date)
         return false if weekend?(date)                  # weekend are never public holidays
         populate_public_holiday_collection_for_year(date.year)
         
@@ -149,6 +166,7 @@ class HolidayCalendar
     # Returns true if the specified date is neither a weekend nor a public holiday
     #
     def working_day?(date, repopulate = true)
+        date = to_date(date)
         if repopulate
             populate_public_holiday_collection_for_year(date.year)
         end
@@ -159,6 +177,8 @@ class HolidayCalendar
     # Returns the count of the number of working days between two dates (does not count the start date as 1 day). 
     #
     def count_working_days_between(start_date, end_date)
+        start_date = to_date(start_date)
+        end_date = to_date(end_date)
         populate_public_holiday_collection_for_year(start_date.year)
         populate_public_holiday_collection_for_year(end_date.year)
         if start_date >= end_date 
@@ -184,6 +204,7 @@ class HolidayCalendar
     # * num_working_days : the number of working days to count
     #
     def working_days_after(start_date, num_working_days)
+        start_date = to_date(start_date)
         populate_public_holiday_collection_for_year(start_date.year)
         working_days_offset(start_date, num_working_days, :forward)
     end
@@ -197,6 +218,7 @@ class HolidayCalendar
     # * num_working_days : the number of working days to count
     #
     def working_days_before(start_date, num_working_days)
+        start_date = to_date(start_date)
         populate_public_holiday_collection_for_year(start_date.year)
         working_days_offset(start_date, num_working_days, :backward)
     end    
@@ -231,6 +253,7 @@ class HolidayCalendar
     #   a day specified in the take_before or take_after options of the PublicHolidaySpecification)
     #
     def holiday_name(date, date_adjusted_text = true)
+        date = to_date(date)
         populate_public_holiday_collection_for_year(date.year)
         ph = @public_holiday_hash[date]
         if ph.nil?
@@ -243,6 +266,15 @@ class HolidayCalendar
     
     
     private
+    
+    # converts DateTime objects to Date object
+    def to_date(dt)
+        Date.new(dt.year, dt.month, dt.day)
+    end
+        
+        
+    
+    
     
     # returns true if array contains only instances of klass
     def all_occurrances_of(klass, array)
@@ -263,15 +295,21 @@ class HolidayCalendar
         
         territory = territory.to_s
         yaml_files = Dir[File.dirname(__FILE__) + '/../config/*.yaml']
+        territory_found = false
         yaml_files.each do |yf|
             begin
                 yaml_spec = YAML.load_file(yf)
                 next if yaml_spec['territory'] != territory
+                territory_found = true
                 instantiate_from_yaml(cal, yf)
             rescue => err
                 puts "ERROR while loading #{yf}"
                 raise
             end    
+        end
+        
+        unless territory_found
+            raise "Unable to file standard config file for territory #{territory}"
         end
 
     end

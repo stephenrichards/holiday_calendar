@@ -90,7 +90,17 @@ class HolidayCalendarTest < Test::Unit::TestCase
     
     
     
+    
+    
+    
     ############# tests for create method ####################
+    
+    
+    def test_we_getting_the_version_under_test
+        require File.dirname(__FILE__) + '/../lib/holiday_calendar_version'
+        
+        assert_equal HOLIDAY_CALENDAR_VERSION, HolidayCalendar.version
+    end
     
     def test_holiday_object_created_from_array_gives_expected_results
         # given a HolidayCalendar instantiated with the create method
@@ -105,6 +115,9 @@ class HolidayCalendarTest < Test::Unit::TestCase
         assert_false @cal.working_day?(Date.new(2009, 8, 31)), 'August Bank holiday erroneously recognised as a working day'
         assert_true @cal.public_holiday?(Date.new(2012, 8, 13)), 'August 13 2012 (Olympics day carried forward from 12th) not recognised as a public holiday'
         assert_false @cal.public_holiday?(Date.new(2011, 8, 13)), 'August 12 2011 erroneously recognised as a public holiday'
+        assert_true @cal.weekend_day_number?(0), 'Day 0 (Saturday) not recognised as a weekend'
+        assert_true @cal.weekend_day_number?(6), 'Day 6 (Sunday) not recognised as a weekend'
+        assert_false @cal.weekend_day_number?(1), 'Day 1 (Monday) recognised as a weekend'
     end
     
     
@@ -303,7 +316,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
         
         em = Date.new(2010, 4, 5)
         assert_true cal.public_holiday?(em)
-        assert_equal 'lundi de Pâques', cal.holiday_name(em)
+        assert_equal 'Lundi de Pâques', cal.holiday_name(em)
         
         ld = Date.new(2009, 5, 1)
         assert_true cal.public_holiday?(ld)
@@ -341,7 +354,7 @@ class HolidayCalendarTest < Test::Unit::TestCase
     
     def test_loading_from_uk_std_config_gives_expected_results
         # given a holiday calendar loaded from a standard config for france
-        cal = HolidayCalendar.load(:uk)
+        cal = HolidayCalendar.load(:uk_en)
         
         # when I test UK holiday dates, then they should be holidays
         assert_true cal.public_holiday?(Date.new(2010, 1, 1))
@@ -541,7 +554,20 @@ class HolidayCalendarTest < Test::Unit::TestCase
     
     
     
-    
+    def test_christmas_2010_gives_exected_results
+        dates = {23 => true,
+                 24 => true,
+                 25 => false,
+                 26 => false,
+                 27 => false,
+                 28 => false,
+                 29 => true
+            }
+        
+        dates.each do |day, expected|
+            assert_equal expected, @cal.working_day?(Date.new(2010, 12, day)), "#{day} Dec 2010 expected public_holiday = #{expected} - was not"
+        end
+    end
     
     
     

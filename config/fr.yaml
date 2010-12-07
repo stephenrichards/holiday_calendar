@@ -23,7 +23,7 @@ public_holidays:
         day: 8
         
 
-    lundi de Pâques:
+    Lundi de Pâques:
         years: all
         class_method: ReligiousFestival.easter_monday
         

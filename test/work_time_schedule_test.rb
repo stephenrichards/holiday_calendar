@@ -11,6 +11,9 @@ class WorkTimeScheduleTest < Test::Unit::TestCase
         @schedule                  = WorkTimeSchedule.new(calendar, 9, 0, 17, 30)
         @christmas_day             = DateTime.new(2010, 12, 25, 11, 10, 0)
         @day_after_boxing_day_0900 = DateTime.new(2010, 12, 29, 9, 0, 0)
+        @day_after_boxing_day_1025 = DateTime.new(2010, 12, 29, 10, 25, 0)
+        @lieu_boxing_day           = DateTime.new(2010, 12, 28, 9, 0, 0)
+        @christmas_eve_1025        = DateTime.new(2010, 12, 24, 10, 25, 0)
         @christmas_eve_1900        = DateTime.new(2010, 12, 24, 19, 0, 0)
         
         @sunday_1025               = DateTime.new(2010, 12, 5, 10, 25, 0)
@@ -29,6 +32,8 @@ class WorkTimeScheduleTest < Test::Unit::TestCase
         @friday_1730               = DateTime.new(2010, 12, 3, 17, 30, 0)
         @saturday_1025             = DateTime.new(2010, 12, 4, 10, 25, 0)
         @saturday_1410             = DateTime.new(2010, 12, 4, 14, 10, 0)
+       
+        
     end
 
     
@@ -36,8 +41,9 @@ class WorkTimeScheduleTest < Test::Unit::TestCase
     def test_we_can_retrieve_workday_object
         friday = @schedule.workday(5)
         assert_instance_of WorkDay, friday
-        assert_equal (9*60), friday.start_in_minutes
-        assert_equal ((17*60) + 30), friday.end_in_minutes
+        assert_equal 9*60, friday.start_in_minutes
+        expected = (17*60) + 30
+        assert_equal expected, friday.end_in_minutes
     end
    
    
@@ -51,16 +57,16 @@ class WorkTimeScheduleTest < Test::Unit::TestCase
     def test_we_can_set_new_times_for_a_particular_day_by_day_number
         @schedule.set_day(5, WorkTime.new(9, 0), WorkTime.new(17, 0))
         friday = @schedule.workday(5)
-        assert_equal (9*60), friday.start_in_minutes
-        assert_equal (17*60), friday.end_in_minutes
+        assert_equal 9*60, friday.start_in_minutes
+        assert_equal 17*60, friday.end_in_minutes
     end    
     
     
     def test_we_can_set_new_times_for_a_particular_day_by_day_name
         @schedule.friday(WorkTime.new(9, 0), WorkTime.new(16, 0))
         friday = @schedule.workday(5)
-        assert_equal (9*60), friday.start_in_minutes
-        assert_equal (16*60), friday.end_in_minutes
+        assert_equal 9*60, friday.start_in_minutes
+        assert_equal 16*60, friday.end_in_minutes
     end        
     
     
@@ -156,36 +162,83 @@ class WorkTimeScheduleTest < Test::Unit::TestCase
         # after work hours, the end of working hours shoudl be returned
         assert_dates_equal @thursday_1730, @schedule.time_or_end_of_day(@thursday_1812)
         
-        # on a non working day, the end of the previsou working day should be returned
+        # on a non working day, the end of the previson working day should be returned
         assert_dates_equal @friday_1730, @schedule.time_or_end_of_day(@sunday_1025)
     end
     
     
     
     
-    def test_elapsed_minutes_between_two_periods_during_working_hours_on_the_same_day_returns_the_expected_result
-        assert_equal 318, @schedule.elapsed_minutes(@monday_1025, @monday_1543)
+    
+    
+    def test_total_working_minutes_gives_the_correct_value
+        # for a normal working day, should give 09:00 - 17:30 = 8.5 hours = 510 minutes
+        assert_equal 510, @schedule.total_working_minutes(@friday_1812)
+        
+        # for a non_working day, should give 0 minutes
+        assert_equal 0, @schedule.total_working_minutes(@sunday_1025)
+        assert_equal 0, @schedule.total_working_minutes(@lieu_boxing_day)
+        
+        # if we set Saturday to be half day....
+         @schedule.set_day(6, WorkTime.new(9, 0), WorkTime.new(12, 30))
+         assert_equal 210, @schedule.total_working_minutes(@saturday_1025)
     end
+        
+        
+        
+    def test_minutes_worked_today_until
+        # for a normal working day, should be the number of minutes between start and date_time
+        assert_equal 85, @schedule.minutes_worked_today_until(@monday_1025)
+        
+        # for a time before the start of work it should be zero
+        assert_equal 0, @schedule.minutes_worked_today_until(@monday_0845)
+        
+        # for a time after the end of the woring day, the total_working_minutes weill be returned
+        assert_equal @schedule.total_working_minutes(@friday_1812), @schedule.minutes_worked_today_until(@friday_1812)
+        
+        # For a non working day, zero should be returned
+        assert_equal 0, @schedule.minutes_worked_today_until(@sunday_1025)
+        
+    end
+        
+        
+    
+    
+    
+    def test_elapsed_minutes
+        # between two times during working hours on the same day should give the difference in minutes between the two times
+        assert_equal 318, @schedule.elapsed_minutes(@monday_1025, @monday_1543)
+        
+        # between a time during working hours and time after working hours on same day should give time up to end of working hours
+        assert_equal 425, @schedule.elapsed_minutes(@friday_1025, @friday_1812)
+        
+        # between a time before working hours and a time after working hours on same day should tive total_working_minutes
+        assert_equal 510, @schedule.elapsed_minutes(@friday_0845, @friday_1812)
+
+        # between a time before working hours and a time during working hours on the same day should give time from start of working day
+        assert_equal 85, @schedule.elapsed_minutes(@friday_0845, @friday_1025)
+
+        # between time after working hours and time before working hours the next day should give zero
+        assert_equal 0, @schedule.elapsed_minutes(@thursday_1812, @friday_0845)
+        
+        # between time after working hours and time dureing working hours the next day should give time from start of work next day
+        assert_equal 85, @schedule.elapsed_minutes(@thursday_1812, @friday_1025)
+        
+        # over the holiday period.....
+        # last working day before CHristmas is 24th, next is 29th
+        assert_equal 510, @schedule.elapsed_minutes(@christmas_eve_1025, @day_after_boxing_day_1025)
+        assert_equal 85, @schedule.elapsed_minutes(@christmas_eve_1900, @day_after_boxing_day_1025)
         
 
-    def test_elapsed_minutes_between_time_during_working_hours_and_time_after_end_of_wokring_hours_on_the_same_day_gives_expected_result
-        assert_equal 425, @schedule.elapsed_minutes(@friday_1025, @friday_1812)
-        assert_equal 510, @schedule.elapsed_minutes(@friday_0845, @friday_1812)
     end
-     
-        
-    def test_elapsed_minutes_between_time_before_working_hours_and_time_during_working_hours_gives_expected_result
-        assert_equal 85, @schedule.elapsed_minutes(@friday_0845, @monday_1025)
-    end
+
+
     
-    
-    # def test_elapsed_minutes_between_time_after_working_hours_and_time_during_working_hours_next_day
-    #     assert_equal 85, @schedule.elapsed_minutes(@thursday_1812, @friday_1025)
-    # end
+
     
     
     def test_private_method_time_to_end_of_day
-        assert_equal 107, @schedule.send(:time_to_end_of_day, @monday_1543)
+        assert_equal 107, @schedule.send(:minutes_to_end_of_day, @monday_1543)
     end
     
     

@@ -21,6 +21,7 @@ class WorkTimeSchedule
     #
     #        cal = HolidayCalendar.new(:uk_en)                      # use the UK English Holiday Calendar
     #        wts = WorkTimeSchedule.new(cal, 9, 0, 17, 30)          # instantiate the Work Time Schedule with work hours 09:00 - 17:30
+    #                                                               # for all days designated as work days
     #
     def initialize(calendar, start_hh, start_mm, end_hh, end_mm)
         @calendar = calendar
@@ -55,13 +56,14 @@ class WorkTimeSchedule
     
     
     
-    # Overrides the start and end times of the specified working day.
+    # Overrides the start and end times of the specified working day.  This can be used to, for example, set an
+    # earlier finish date for Fridays, or to set working times for weekends.
     #
     # Parameters:
     # * day_number: A number in the range 0 (Sunday) to 6 (Saturday) defining which day is to be overridden
     # * start_time: A 3 or 4 digit number representing hours and minutes of start of work time (e.g. 930 = 9:30 am)
     # * end_time: A 3 or 4 digit number representing hours and minutes of end of work time (e.g. 1730 = 5:30 pm)
-    #        
+    #
     def set_day(day_number, start_time, end_time)
         raise 'Day number must be in range 0-6' if day_number < 0 || day_number > 6
         raise 'Start Time must be a WorkTime object' unless start_time.instance_of?(WorkTime)
@@ -80,6 +82,9 @@ class WorkTimeSchedule
     end
     
     
+    
+    # Returns true if the specified date is a working day.
+    #
     def working_day?(date_time)
         raise "Parameter must be a date_time object: id #{date_time.class}" unless date_time.is_a?(DateTime)
         return false if  @calendar.public_holiday?(date_time)
@@ -112,11 +117,8 @@ class WorkTimeSchedule
     
     # Returns a DateTime object representing the end of the working day in relation date_time.  If date_time is 
     # not a working day, the end of the previous working day is returned.
-    #    
-    
-    
+    #
     def end_of_day(date_time)
-        puts %Q{end of day with #{date_time}}
         unless working_day?(date_time)
             return end_of_day(previous_working_day(date_time))
         end
@@ -132,6 +134,7 @@ class WorkTimeSchedule
     
     
     # returns a DateTime object for the same time on the next working day
+    #
     def next_working_day(date_time)
         date_time = date_time + 1
         while !working_day?(date_time)
@@ -142,8 +145,8 @@ class WorkTimeSchedule
         
     
     # returns a DateTime object for the same time on the previous working day
+    #
     def previous_working_day(date_time)
-        puts "previous working day with #{date_time}"
         date_time = date_time - 1
         while !working_day?(date_time)
             date_time = date_time - 1
@@ -181,21 +184,53 @@ class WorkTimeSchedule
     # returns a date_time object as follows:
     # * if date_time is during working hours, returns date_time unmodified
     # * if date_time is after working hours, returns the end of working time
+    # * if date_time is before working hours, returns the start of the working time
     # * if date_time is on a non_working day, returns the end of working time for the previous day
+    #
     def time_or_end_of_day(date_time)
         wt = to_work_time(date_time)
-        day_num = to_day_num(date_time)
-        if wt > @days[day_num].end_time
+        work_day = get_work_day(date_time)
+        if wt > work_day.end_time
             return end_of_day(date_time)
+        elsif wt < work_day.start_time
+            return start_of_day(date_time)
         else
             return date_time
         end
     end
         
+        
+        
+    # Returns the total number of minutes in a full working day for the given DateTime
+    def total_working_minutes(date_time)
+        return 0 unless working_day?(date_time)
+        work_day = get_work_day(date_time)
+        work_day.total_minutes
+    end
+    
+    
+    
+    # Returns the time in minutes between the working start time for the day, and the specified date_time.
+    # If the date refers to a non-working day, or the time is before the start of the working day, 0 is returned.
+    # If the date refers to a time after the working day, total_working_minutes is returned.
+    #
+    def minutes_worked_today_until(date_time)
+        return 0 unless working_day?(date_time)
+        work_day = get_work_day(date_time)
+        t = to_work_time(date_time)
+        return 0 if t < work_day.start_time
+        return total_working_minutes(date_time) if t > work_day.end_time
+        end_time = to_work_time(date_time)
+        end_time - work_day.start_time
+    end
+    
+    
+    
     
     
     
     # Shorthand for WorkingTimeSchedule#time(DateTime.now)
+    #
     def now
         time(DateTime.now)
     end
@@ -214,23 +249,26 @@ class WorkTimeSchedule
         end
         
         # elapsed time spans more than one day
+        
+        
+        
+        
         minutes = minutes_to_end_of_day(working_start_time)
-        puts "adding #{minutes} minutes to end of first day"
-        while year_day(working_start_time) < year_day(working_end_time)
-            working_start_time = x
-            puts "working start_time is now #{working_start_time}"
-            puts "start of day is #{start_of_day(working_start_time)}"
-            puts "adding #{minutes_to_end_of_day(start_of_day(working_start_time))}"
-            minutes += minutes_to_end_of_day(start_of_day(working_start_time))
+        while year_day(working_start_time) < year_day(working_end_time) 
+            working_start_time = next_working_day(working_start_time)
+            if year_day(working_start_time) < year_day(working_end_time)
+                minutes += total_working_minutes(working_start_time)
+            else
+                minutes += minutes_worked_today_until(working_end_time)
+            end
         end
-        puts to_work_time(start_of_day(working_start_time))
-        puts to_work_time(working_end_time)
-        minutes += (to_work_time(start_of_day(working_start_time)) - to_work_time(working_end_time))
+        minutes
     end
 
     
     
     # Translate method names sunday, monday etc to set_day
+    #
     def method_missing(method, *params)
         valid_methods = [:sunday, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
         unless valid_methods.include?(method)
@@ -244,7 +282,17 @@ class WorkTimeSchedule
     
     
     private
+    # Returns the WorkDay object for the specified date
+    #
+    def get_work_day(date_time)
+        day_num = to_day_num(date_time)
+        work_day = @days[day_num]
+    end
     
+    
+    
+    # Returns the number of minutes from the date_time to the end of the working day on that date.
+    #
     def minutes_to_end_of_day(date_time)
         wt = to_work_time(date_time)
         day_num = to_day_num(date_time)
@@ -255,6 +303,7 @@ class WorkTimeSchedule
     
     
     # returns representation of date as an integer in form YYYYDDD
+    #
     def year_day(date_time)
         (date_time.year * 1000) + date_time.yday
     end
@@ -262,11 +311,13 @@ class WorkTimeSchedule
     
     
     # returns the day number for the given DateTime object
+    #
     def to_day_num(date_time)
         date_time.strftime('%w').to_i
     end
     
     # returns a WorkDay object for the specified date
+    #
     def to_work_day(date_time)
         day_num = to_day_num(date_time)
         @days[day_num]
@@ -275,6 +326,7 @@ class WorkTimeSchedule
     
     
     # returns a WorkTime object for the given DateTime object
+    #
     def to_work_time(date_time)
         mins = date_time.strftime('%M').to_i
         hours = date_time.strftime('%H').to_i
@@ -282,6 +334,7 @@ class WorkTimeSchedule
     end
     
     # returns a date_time object with the time element modified to be the start_time of that day
+    #
     def start_of_working_day(date_time)
         day_num = to_day_num(date_time)
         start_time = @days[day_num].start_time
