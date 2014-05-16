@@ -14,6 +14,23 @@
 # * Users can define public holidays for other territories and add them into the calendar
 #
 #
+# == Quick Start using pre-defined calendars
+#
+# Pre-defined calendars exist for United Kingdom (England), France, US (Federal holidays only).
+# 
+# To start using the calendar:
+#
+#     cal = HolidayCalendar.load(:uk)
+#     puts cal.list                       # prints a list of holidays and their definitions
+#     cal.list_for_year                   # ["Wed 01 Jan 2014 : New Year's Day", "Fri 18 Apr 2014 : Good Friday", 
+#                                            "Mon 21 Apr 2014 : Easter Monday", "Mon 05 May 2014 : May Day", 
+#                                            "Mon 26 May 2014 : Spring Bank Holiday", "Mon 25 Aug 2014 : Summer Bank Holiday", 
+#                                            "Thu 25 Dec 2014 : Christmas Day", "Fri 26 Dec 2014 : Boxing Day"]
+#      cal.count_working_days_between(Date.new(2014, 5, 16), Date.new(2014, 5, 30))    # => 9
+
+#     
+
+
 #
 # == Overview
 # The library is made up of two main elements:
