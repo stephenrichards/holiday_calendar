@@ -1,8 +1,11 @@
-require File.dirname(__FILE__) + '/public_holiday_specification'
-require File.dirname(__FILE__) + '/public_holiday'
-require File.dirname(__FILE__) + '/religious_festival'
-require File.dirname(__FILE__) + '/work_time_schedule'
-require File.dirname(__FILE__) + '/holiday_calendar_version'
+
+require_relative 'public_holiday_specification'
+require_relative 'public_holiday'
+require_relative 'religious_festival'
+require_relative 'work_time_schedule'
+require_relative 'holiday_calendar_version'
+require_relative 'work_day'
+
 
 require 'yaml'
 
@@ -302,7 +305,7 @@ class HolidayCalendar
                 next if yaml_spec['territory'] != territory
                 territory_found = true
                 instantiate_from_yaml(cal, yf)
-            rescue => err
+            rescue 
                 puts "ERROR while loading #{yf}"
                 raise
             end    

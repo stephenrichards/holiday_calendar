@@ -173,7 +173,7 @@ class ModifiedWeekdayTest < Test::Unit::TestCase
     
     def test_that_an_invalid_weekday_raises_an_exception
         err = assert_raise ArgumentError do
-            mw = ModifiedWeekday.new(:second_wed)
+            ModifiedWeekday.new(:second_wed)
         end
         assert_equal 'Invalid Weekday component passed to ModifiedWeekday.new: second_wed', err.message
     end
@@ -181,7 +181,7 @@ class ModifiedWeekdayTest < Test::Unit::TestCase
    
    def test_that_an_invalid_modifier_raises_an_exception
        err = assert_raise ArgumentError do
-           mw = ModifiedWeekday.new(:fifth_tuesday)
+           ModifiedWeekday.new(:fifth_tuesday)
        end
        assert_equal 'Invalid weekday modifier passed to ModifiedWeekday.new: fifth_tuesday', err.message       
    end

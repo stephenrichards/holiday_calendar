@@ -35,14 +35,14 @@ class WorkTimeTest < Test::Unit::TestCase
 
     def test_negative_hours_raises_exception
         err = assert_raise RuntimeError do
-            wt = WorkTime.new(-3, 30)
+             WorkTime.new(-3, 30)
         end
         assert_equal 'Hours must be in range 0-23', err.message
     end
     
     def test_out_of_range_hours_raises_exception
         err = assert_raise RuntimeError do
-            wt = WorkTime.new(24, 24)
+            WorkTime.new(24, 24)
         end
         assert_equal 'Hours must be in range 0-23', err.message
     end    
@@ -50,14 +50,14 @@ class WorkTimeTest < Test::Unit::TestCase
 
     def test_negative_minutes_raises_exception
         err = assert_raise RuntimeError do
-            wt = WorkTime.new(3, -30)
+            WorkTime.new(3, -30)
         end
         assert_equal 'Minutes must be in range 0-59', err.message
     end
     
-    def test_out_of_range_hours_raises_exception
+    def test_out_of_range_minutes_raises_exception
         err = assert_raise RuntimeError do
-            wt = WorkTime.new(6, 61)
+            WorkTime.new(6, 61)
         end
         assert_equal 'Minutes must be in range 0-59', err.message
     end      

@@ -1,6 +1,7 @@
 require 'test/unit' 
 require 'pp'
 require 'date'
+require_relative '../lib/holiday_calendar'
 
 
 

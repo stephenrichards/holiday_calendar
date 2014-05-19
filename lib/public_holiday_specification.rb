@@ -158,7 +158,7 @@ class PublicHolidaySpecification
        
        begin
            valid_method = klass.respond_to?(method_name)
-       rescue NameError => err
+       rescue NameError
            puts "Unknown Class passed to PublicHolidaySpecification.new as class_method parameter: #{class_method}"
            raise
        end

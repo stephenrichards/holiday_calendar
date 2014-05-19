@@ -1,10 +1,3 @@
-require File.dirname(__FILE__) + '/holiday_calendar'
-require File.dirname(__FILE__) + '/work_time'
-require File.dirname(__FILE__) + '/work_day'
-
-
-
-
 
 class WorkTimeSchedule
     
@@ -270,12 +263,12 @@ class WorkTimeSchedule
     # Translate method names sunday, monday etc to set_day
     #
     def method_missing(method, *params)
-        valid_methods = [:sunday, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
-        unless valid_methods.include?(method)
-            raise "Method #{method.inspect} not recognised"
-        end
-        day_number = valid_methods.index(method)
-        set_day(day_number, params[0], params[1])
+      valid_methods = [:sunday, :monday, :tuesday, :wednesday, :thursday, :friday, :saturday]
+      unless valid_methods.include?(method)
+          raise "Method #{method.inspect} not recognised"
+      end
+      day_number = valid_methods.index(method)
+      set_day(day_number, params[0], params[1])
     end
     
     
@@ -285,8 +278,8 @@ class WorkTimeSchedule
     # Returns the WorkDay object for the specified date
     #
     def get_work_day(date_time)
-        day_num = to_day_num(date_time)
-        work_day = @days[day_num]
+      day_num = to_day_num(date_time)
+      @days[day_num]
     end
     
     

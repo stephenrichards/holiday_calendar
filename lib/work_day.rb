@@ -1,7 +1,3 @@
-require File.dirname(__FILE__) + '/work_day'
-
-
-
 # encapsulates the start and end times for a working day
 class WorkDay
     

@@ -26,7 +26,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
         
         # when I attempt to instantiate a PHS from it, I should get an exception
         err = assert_raise ArgumentError do
-            phs = PublicHolidaySpecification.instantiate_from_yaml_definition('/path/to/file.yaml', 'Good Friday', yaml_spec)
+            PublicHolidaySpecification.instantiate_from_yaml_definition('/path/to/file.yaml', 'Good Friday', yaml_spec)
         end
         
         assert_equal "Invalid definition of Good Friday in public_holidays section of /path/to/file.yaml", err.message
@@ -142,7 +142,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
     
     def test_exception_thrown_if_mandatory_paramaters_missing
         err = assert_raise ArgumentError do
-            phs = PublicHolidaySpecification.new(:name => 'test')
+            PublicHolidaySpecification.new(:name => 'test')
         end
         assert_equal "Mandatory parameters are missing in a call to PublicHolidaySpecification.new: years, month, day", err.message
     end
@@ -152,7 +152,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
     def test_exception_thrown_if_invalid_paramaeter_passed_to_constructor
         
         err = assert_raise ArgumentError do
-            phs = PublicHolidaySpecification.new(:name => 'Test Holiday', :invalid_param => 'xxxx')
+            PublicHolidaySpecification.new(:name => 'Test Holiday', :invalid_param => 'xxxx')
         end
         
         assert_equal 'Invalid parameter passed to PublicHolidaySpecification.new: invalid_param => xxxx', err.message
@@ -161,7 +161,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
     
     def test_exception_thrown_if_invalid_year_passed_to_constructor
         err = assert_raise ArgumentError do
-            phs = PublicHolidaySpecification.new(:name => 'Xmas', :years => :this_year, :month => 12, :day => 25)
+           PublicHolidaySpecification.new(:name => 'Xmas', :years => :this_year, :month => 12, :day => 25)
         end
         assert_equal 'Invalid value passed as years parameter. Must be a Range, Fixnum or :all', err.message
     end
@@ -169,7 +169,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
     
     def test_exception_thrown_if_invalid_month_passed_to_constructor
         err = assert_raise ArgumentError do
-            phs = PublicHolidaySpecification.new(:name => 'Xmas', :years => :all, :month => 'décembre', :day => 25)
+            PublicHolidaySpecification.new(:name => 'Xmas', :years => :all, :month => 'décembre', :day => 25)
         end
         assert_equal 'Invalid month passed to PublicHolidaySpecification.new: décembre', err.message  
     end
@@ -177,7 +177,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
               
     def test_exception_thrown_if_out_of_range_month_passed_to_constructor
         err = assert_raise ArgumentError do
-            phs = PublicHolidaySpecification.new(:name => 'Xmas', :years => :all, :month => 33, :day => 25)
+            PublicHolidaySpecification.new(:name => 'Xmas', :years => :all, :month => 33, :day => 25)
         end
         assert_equal 'Invalid month passed to PublicHolidaySpecification.new: 33', err.message  
     end        
@@ -185,7 +185,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
     
     def test_exception_thrown_if_out_of_range_day_passed_to_constructor
         err = assert_raise ArgumentError do
-            phs = PublicHolidaySpecification.new(:name => 'Xmas', :years => :all, :month => 12, :day => 125)
+            PublicHolidaySpecification.new(:name => 'Xmas', :years => :all, :month => 12, :day => 125)
         end
         assert_equal 'Invalid value passed as :day parameter to PublicHolidaySpecification.new: 125', err.message  
     end      
@@ -195,7 +195,7 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
     
     def test_exception_thrown_if_obsolete_carry_forward_used
         err = assert_raise ArgumentError do
-            phs = PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13, :carry_forward => true)  
+            PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13, :carry_forward => true)  
         end
         assert_equal 'Invalid parameter passed to PublicHolidaySpecification.new: carry_forward => true', err.message
     end
@@ -207,48 +207,37 @@ class PublicHolidaySpecificationTest < Test::Unit::TestCase
        
        # when I see the take_before attribute, it should be an empty array
        assert_equal Array.new, phs.take_before
-   end
+    end
     
-   def test_default_take_after_is_empty_arry
+    def test_default_take_after_is_empty_arry
        # given a public holiday specification without take before specified
        phs =  PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13)  
        
        # when I see the take_after attribute, it should be an empty array
        assert_equal Array.new, phs.take_after
-   end    
-   
-   def test_take_before_parameters_are_turned_into_valid_day_numbers
+    end    
+
+    def test_take_before_parameters_are_turned_into_valid_day_numbers
        # given a public holiday specification with a take_before parameter of saturday, sunday
        phs =  PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13,
                         :take_before => ['Saturday', 'Sunday'])
 
        # when I see the take_after attribute, it should be an array of 6,0
        assert_equal [6,0], phs.take_before
-   end       
- 
- 
-   def test_take_before_parameters_are_turned_into_valid_day_numbers
-       # given a public holiday specification with a take_before parameter of saturday, sunday
-       phs =  PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13,
-                        :take_after => ['Saturday', 'Sunday'])
+    end       
 
-       # when I see the take_after attribute, it should be an array of 6,0
-       assert_equal [6,0], phs.take_after
-   end 
-   
-   
-   def test_take_before_raises_exception_if_given_non_array
+    def test_take_before_raises_exception_if_given_non_array
        err = assert_raise ArgumentError do
-           phs = PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13, :take_before => 'Saturday')  
+           PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13, :take_before => 'Saturday')  
        end
        assert_equal 'take_before or take_after parameters must be an array', err.message
-   end
-   
-   def test_take_before_raises_exception_if_given_day_numbers_out_of_range
+    end
+
+    def test_take_before_raises_exception_if_given_day_numbers_out_of_range
        err = assert_raise ArgumentError do
-           phs = PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13, :take_before => [0,7])  
+           PublicHolidaySpecification.new(:name => 'test', :years => :all, :month => 8, :day => 13, :take_before => [0,7])  
        end
        assert_equal 'day number passed as take_before and take_after parameters must be in range 0-6', err.message
-   end   
+    end   
   
 end

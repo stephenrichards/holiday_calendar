@@ -1,5 +1,4 @@
-require File.dirname(__FILE__) + '/../lib/work_day'
-require File.dirname(__FILE__) + '/../lib/work_time'
+
 require File.dirname(__FILE__) + '/test_helper'
 
 require 'test/unit'
